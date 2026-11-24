@@ -313,8 +313,8 @@ export class MediaSession {
 
   get parentName(): string | null {
     if (!this.parentId) return null
-    if (this.parentId === this.hostId) return this.session.live.get().hostName || "Host"
-    return this.session.profiles.get(this.parentId).name || "Relay"
+    if (this.parentId === this.hostId) return this.session.live.get().hostName || "Origem"
+    return this.session.profiles.get(this.parentId).name || "Retransmissão"
   }
 
   get childIds(): string[] {

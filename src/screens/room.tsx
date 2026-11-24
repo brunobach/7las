@@ -79,12 +79,12 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
 
   return (
     <div className={cn("mx-auto flex w-full flex-col gap-5 p-7 pb-10", theater ? "max-w-[1600px]" : "max-w-[1180px]")}>
-      <section className="app-enter flex items-center justify-between gap-4">
+      <section className="app-enter flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2"><h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">{settings.roomName}</h1>{sharing ? <Badge><span className="size-1.5 rounded-full bg-live" />Ao vivo</Badge> : <Badge variant="secondary">Sala aberta</Badge>}</div>
           <p className="mt-1.5 text-sm text-muted-foreground">{viewers === 0 ? "Esperando seus amigos entrarem" : `${viewers} ${viewers === 1 ? "pessoa" : "pessoas"} na sala${sharing ? "" : " · sua tela ainda não está sendo mostrada"}`}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           {sharing ? (
             <>
               <Button variant="outline" disabled={switching} onClick={() => void changeSource()}><HugeiconsIcon icon={RefreshIcon} data-icon="inline-start" />Trocar tela</Button>

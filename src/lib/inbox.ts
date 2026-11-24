@@ -1,3 +1,4 @@
+import { isAvatarSeed, validAvatarSeed } from "@/lib/avatar"
 import { openCodeRoom } from "@/lib/lobby"
 import type { AppSettings, Friend } from "@/types"
 
@@ -12,16 +13,17 @@ import type { AppSettings, Friend } from "@/types"
 const DELIVERY_TIMEOUT_MS = 15_000
 const SEND_INTERVAL_MS = 2_000
 
-type RoomInvite = { type: "room-invite"; fromName: string; fromKey: string; invite: string }
+type RoomInvite = { type: "room-invite"; fromName: string; fromAvatar?: number; fromKey: string; invite: string }
 type Ack = { type: "ack" }
 type InboxMessage = RoomInvite | Ack
 
-export type ReceivedInvite = { id: string; fromName: string; fromKey: string; invite: string; at: number }
+export type ReceivedInvite = { id: string; fromName: string; fromAvatar: number; fromKey: string; invite: string; at: number }
 
 export function isRoomInvite(value: unknown): value is RoomInvite {
   const item = value as RoomInvite
   return typeof item === "object" && item !== null && item.type === "room-invite"
     && typeof item.fromName === "string" && item.fromName.trim().length > 0 && item.fromName.length <= 40
+    && (item.fromAvatar === undefined || isAvatarSeed(item.fromAvatar))
     && typeof item.fromKey === "string" && item.fromKey.length >= 16 && item.fromKey.length <= 128
     && typeof item.invite === "string" && item.invite.length <= 128
 }
@@ -43,7 +45,7 @@ export class Inbox {
       const key = `${message.fromKey}:${message.invite}`
       if (seen.has(key)) return
       seen.add(key)
-      onInvite({ id: crypto.randomUUID(), fromName: message.fromName.trim(), fromKey: message.fromKey, invite: message.invite, at: Date.now() })
+      onInvite({ id: crypto.randomUUID(), fromName: message.fromName.trim(), fromAvatar: validAvatarSeed(message.fromAvatar, message.fromKey), fromKey: message.fromKey, invite: message.invite, at: Date.now() })
     })
     return inbox
   }
@@ -67,7 +69,7 @@ export class InviteError extends Error {
 export async function sendRoomInvite(friend: Friend, settings: AppSettings, publicKey: string, invite: string, signal?: AbortSignal): Promise<void> {
   const room = await openCodeRoom("inbox", friend.publicKey, settings)
   const action = room.makeAction<InboxMessage>("inbox")
-  const message: RoomInvite = { type: "room-invite", fromName: settings.displayName.trim().slice(0, 40), fromKey: publicKey, invite }
+  const message: RoomInvite = { type: "room-invite", fromName: settings.displayName.trim().slice(0, 40), fromAvatar: settings.avatarSeed, fromKey: publicKey, invite }
   return new Promise<void>((resolve, reject) => {
     let done = false
     const finish = (error: InviteError | null) => {

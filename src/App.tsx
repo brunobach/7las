@@ -244,6 +244,7 @@ export default function App() {
     ...invites.map((invite) => ({
       id: `invite:${invite.id}`,
       title: `${invite.fromName} te chamou para a sala`,
+      avatar: friends.find((friend) => friend.publicKey === invite.fromKey)?.avatarSeed ?? invite.fromAvatar,
       body: "Entre para ver a tela e compartilhar a sua.",
       accept: "Entrar",
       deny: "Agora não",

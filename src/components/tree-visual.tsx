@@ -15,7 +15,7 @@ export function TreeVisual({ settings, viewers, live }: { settings: AppSettings;
     <div className="rounded-xl border border-border bg-background/45 p-5" role="img" aria-label="Árvore de distribuição da sessão">
       <div className="flex items-center gap-3">
         <UserAvatar seed={settings.avatarSeed} name={settings.displayName} />
-        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{settings.displayName} <span className="font-normal text-muted-foreground">(você)</span></p><p className="text-xs text-muted-foreground">Host · {direct.length} saídas diretas</p></div>
+        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{settings.displayName} <span className="font-normal text-muted-foreground">(você)</span></p><p className="text-xs text-muted-foreground">Origem · {direct.length} saídas diretas</p></div>
         <Badge variant={live ? "default" : "secondary"}>{live ? "Origem ao vivo" : "Ocioso"}</Badge>
       </div>
       {roots.length > 0 && (
@@ -37,7 +37,7 @@ function TreeNode({ viewer, viewers, live }: { viewer: ViewerInfo; viewers: View
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
         <UserAvatar seed={viewer.avatar} name={viewer.name} size="sm" />
         <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{viewer.name}</p><p className="text-xs text-muted-foreground">{viewer.route === "unknown" ? "Medindo rota" : viewer.route === "turn" ? "Rota TURN" : "Rota direta"}{viewer.bitrate !== null ? ` · ${(viewer.bitrate / 1_000_000).toFixed(1)} Mbps` : ""}</p></div>
-        <Badge variant="secondary">{viewer.children.length ? "Relay" : "Leaf"}</Badge>
+        <Badge variant="secondary">{viewer.children.length ? "Retransmissão" : "Espectador"}</Badge>
         {live && viewer.children.length > 0 && <HugeiconsIcon icon={NetworkIcon} className="size-4 text-primary" />}
       </div>
       {children.length > 0 && <div className="relative ml-5 flex flex-col gap-3 pt-3 pl-7 before:absolute before:top-0 before:bottom-7 before:left-0 before:w-px before:bg-border">{children.map((child) => <TreeNode key={child.id} viewer={child} viewers={viewers} live={live} />)}</div>}

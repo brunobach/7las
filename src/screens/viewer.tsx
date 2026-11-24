@@ -56,12 +56,12 @@ export function ViewerScreen({ session, audio, onAudioChange, onStop, onShare, o
 
   return (
     <div className={cn("mx-auto flex w-full flex-col gap-5 p-7", theater ? "max-w-[1600px]" : "max-w-[1180px]")}>
-      <section className="app-enter flex items-center justify-between gap-4">
+      <section className="app-enter flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3"><h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">Sala de {hostName}</h1><Badge variant={session.status === "live" ? "default" : "secondary"}>{STATUS_LABEL[session.status]}</Badge></div>
           <p className="mt-1.5 text-sm text-muted-foreground">{session.status === "live" ? `Você está assistindo${via}` : session.status === "waiting" ? "Você já está na sala." : "Isso costuma levar alguns segundos."}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           {sharing
             ? <Button variant="outline" onClick={onStopSharing}><HugeiconsIcon icon={StopIcon} data-icon="inline-start" />Parar de compartilhar</Button>
             : <><AudioToggle enabled={audio} onChange={onAudioChange} /><Button variant="outline" onClick={onShare}><HugeiconsIcon icon={ScreenShareIcon} data-icon="inline-start" />Compartilhar minha tela</Button></>}

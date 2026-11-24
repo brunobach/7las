@@ -8,22 +8,15 @@
   <meta name="description" content="Abra o 7las para pedir para entrar na sala de um amigo.">
   <style>
     :root {
-      --bg: #f6f5f4;
-      --card: #ffffff;
-      --text: #17181a;
-      --muted: #62656b;
-      --border: #e3e1df;
-      --primary: #ff4d1f;
-      --primary-text: #ffffff;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121315;
-        --card: #1b1c1f;
-        --text: #f2f2f3;
-        --muted: #a0a3a9;
-        --border: #2c2e32;
-      }
+      --bg: #101011;
+      --card: #151516;
+      --text: #eeeeed;
+      --muted: #949497;
+      --border: #ffffff14;
+      --primary: #e8e8e6;
+      --primary-text: #1a1a1b;
+      --brand: #ff4a1f;
+      color-scheme: dark;
     }
     * { box-sizing: border-box; }
     body {
@@ -41,12 +34,12 @@
       max-width: 420px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 14px;
       padding: 28px 24px;
     }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.02em; }
     .mark {
-      width: 32px; height: 32px; border-radius: 10px; background: var(--primary);
+      width: 32px; height: 32px; border-radius: 10px; background: var(--brand);
       display: grid; place-items: center;
     }
     .mark span { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--primary-text); display: grid; place-items: center; }
@@ -57,7 +50,7 @@
       margin: 22px 0;
       padding: 14px;
       border: 1px dashed var(--border);
-      border-radius: 14px;
+      border-radius: 10px;
       text-align: center;
       font: 600 30px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace;
       letter-spacing: 0.14em;
@@ -65,12 +58,15 @@
     }
     .actions { display: flex; flex-direction: column; gap: 10px; }
     a.button, button {
-      display: block; width: 100%; padding: 12px 16px; border-radius: 999px;
+      display: block; width: 100%; padding: 12px 16px; border-radius: 10px;
       font: inherit; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer;
       border: 1px solid var(--border); background: transparent; color: var(--text);
     }
     a.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-text); }
-    a.button:focus-visible, button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 2px; }
+        a.button:focus-visible, button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+    a.button, button { transition: transform 150ms, background-color 150ms; }
+    a.button:hover, button:hover { transform: translateY(-1px); }
+    a.button:active, button:active { transform: translateY(1px); }
     .help { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; }
     .help a { color: var(--text); }
     [hidden] { display: none !important; }

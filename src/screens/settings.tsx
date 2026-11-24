@@ -54,13 +54,13 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 p-7 pb-10">
       <section className="app-enter">
         <h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">Configurações do aplicativo</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Capture, atalhos e rede ficam salvos neste computador.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Captura, atalhos e rede ficam salvos neste computador.</p>
       </section>
       <Tabs defaultValue="general" className="gap-5">
         <TabsList className="h-11 p-1">
           <TabsTrigger value="general" className="px-4">Geral</TabsTrigger>
           <TabsTrigger value="media" className="px-4">Áudio e vídeo</TabsTrigger>
-          <TabsTrigger value="network" className="px-4">Rede e relay</TabsTrigger>
+          <TabsTrigger value="network" className="px-4">Rede e retransmissão</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <Card className="border-border/60 ring-0">
@@ -86,10 +86,10 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
         </TabsContent>
         <TabsContent value="media">
           <Card className="border-border/60 ring-0">
-            <CardHeader><CardTitle>Captura de mídia</CardTitle><CardDescription>Text prioriza detalhes; Motion prioriza movimento. Os limites são aplicados a cada saída WebRTC.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Captura de mídia</CardTitle><CardDescription>Nítido prioriza detalhes; Fluido prioriza movimento. Os limites são aplicados a cada saída WebRTC.</CardDescription></CardHeader>
             <CardContent>
               <FieldGroup>
-                <Field><FieldLabel>Modo de qualidade</FieldLabel><ToggleGroup variant="outline" value={[draft.mode]} onValueChange={(value) => value[0] && patch({ mode: value[0] as AppSettings["mode"] })}><ToggleGroupItem value="sharp">Text · 30 fps</ToggleGroupItem><ToggleGroupItem value="smooth">Motion · 60 fps</ToggleGroupItem></ToggleGroup><FieldDescription>Até {draft.mode === "sharp" ? "6" : "8"} Mbps por saída, sujeito à rede.</FieldDescription></Field>
+                <Field><FieldLabel>Modo de qualidade</FieldLabel><ToggleGroup variant="outline" value={[draft.mode]} onValueChange={(value) => value[0] && patch({ mode: value[0] as AppSettings["mode"] })}><ToggleGroupItem value="sharp">Nítido · 30 fps</ToggleGroupItem><ToggleGroupItem value="smooth">Fluido · 60 fps</ToggleGroupItem></ToggleGroup><FieldDescription>Até {draft.mode === "sharp" ? "6" : "8"} Mbps por saída, sujeito à rede.</FieldDescription></Field>
                 <Field orientation="horizontal"><FieldContent><FieldLabel htmlFor="share-audio">Compartilhar o som junto</FieldLabel><FieldDescription>Leva o som do computador (jogo, vídeo, música) junto com a tela. O microfone nunca é enviado.</FieldDescription></FieldContent><Switch id="share-audio" checked={draft.audioMode !== "none"} onCheckedChange={(checked) => patch({ audioMode: checked ? "system" : "none" })} /></Field>
                 <Alert><HugeiconsIcon icon={InformationCircleIcon} /><AlertTitle>Como o som funciona</AlertTitle><AlertDescription>O Windows só envia som quando você escolhe uma <strong>tela inteira</strong> no seletor e deixa marcado “Compartilhar áudio do sistema”. Janelas sozinhas vão sem som.</AlertDescription></Alert>
               </FieldGroup>
@@ -106,7 +106,7 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
                   <Field><FieldLabel htmlFor="turn-user">Usuário TURN</FieldLabel><Input id="turn-user" autoComplete="off" value={draft.turnUsername} onChange={(event) => patch({ turnUsername: event.target.value })} /></Field>
                 </div>
                 <Field orientation="horizontal"><FieldContent><FieldLabel htmlFor="relay">Permitir retransmissão</FieldLabel><FieldDescription>Seu computador pode encaminhar a mídia recebida, usando upload e processamento.</FieldDescription></FieldContent><Switch id="relay" checked={draft.relayEnabled} onCheckedChange={(checked) => patch({ relayEnabled: checked })} /></Field>
-                <Field><FieldLabel htmlFor="relay-slots">Saídas quando for relay</FieldLabel><Select value={String(draft.relaySlots)} onValueChange={(value) => patch({ relaySlots: Number(value) })} disabled={!draft.relayEnabled}><SelectTrigger id="relay-slots" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="1">1 espectador</SelectItem></SelectGroup></SelectContent></Select><FieldDescription>O host decide os filhos. Um relay nunca escolhe destinatários por conta própria.</FieldDescription></Field>
+                <Field><FieldLabel htmlFor="relay-slots">Saídas quando for relay</FieldLabel><Select value={String(draft.relaySlots)} onValueChange={(value) => patch({ relaySlots: Number(value) })} disabled={!draft.relayEnabled}><SelectTrigger id="relay-slots" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="1">1 espectador</SelectItem></SelectGroup></SelectContent></Select><FieldDescription>O dono da sala decide as conexões. Quem retransmite nunca escolhe destinatários por conta própria.</FieldDescription></Field>
               </FieldGroup>
             </CardContent>
           </Card>
