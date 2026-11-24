@@ -7,15 +7,26 @@ declare class CaptureController {
 
 export const canShare = typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getDisplayMedia)
 
-export async function captureScreen(controller?: CaptureController): Promise<MediaStream> {
-  return navigator.mediaDevices.getDisplayMedia({
+/**
+ * Abre o seletor do Windows. Com `withAudio`, pede também o som do computador
+ * (o Windows só entrega som ao compartilhar uma tela inteira, com "Compartilhar áudio do sistema" marcado).
+ */
+export async function captureScreen(controller?: CaptureController, withAudio = false): Promise<MediaStream> {
+  const stream = await navigator.mediaDevices.getDisplayMedia({
     video: { frameRate: { ideal: 60 }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-    audio: false,
+    // Som de jogo/vídeo: sem os filtros de voz, que cortam música e efeitos.
+    audio: withAudio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2, sampleRate: 48_000 } : false,
+    systemAudio: withAudio ? "include" : "exclude",
+    // Não captura o som que o próprio 7las toca (as telas dos amigos), para não fazer eco.
+    restrictOwnAudio: true,
+    suppressLocalAudioPlayback: false,
     controller,
     surfaceSwitching: "include",
     selfBrowserSurface: "exclude",
     monitorTypeSurfaces: "include",
   } as DisplayMediaStreamOptions)
+  for (const track of stream.getAudioTracks()) track.contentHint = "music"
+  return stream
 }
 
 export function applyContentHint(track: MediaStreamTrack | undefined, mode: QualityMode): void {

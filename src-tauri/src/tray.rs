@@ -34,6 +34,7 @@ pub fn setup(app: &App) -> Result<(), Box<dyn std::error::Error>> {
             }
             "quit" => {
                 let _ = app.emit("tray://stop", ());
+                crate::discord::shutdown();
                 let handle = app.clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_millis(250));

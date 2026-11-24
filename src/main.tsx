@@ -5,12 +5,13 @@ import "@fontsource-variable/figtree"
 import "@fontsource/martian-mono/400.css"
 import "./index.css"
 import App from "./App"
+import { ToastWindow } from "@/screens/toast-window"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <TooltipProvider>
-      <App />
+      {window.location.hash === "#toast" ? <ToastWindow /> : <App />}
     </TooltipProvider>
   </StrictMode>,
 )

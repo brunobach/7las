@@ -12,12 +12,13 @@ import type { AppView } from "@/types"
 
 const items: { id: AppView; label: string; icon: typeof DashboardSquare01Icon }[] = [
   { id: "home", label: "Início", icon: DashboardSquare01Icon },
-  { id: "room", label: "Sala", icon: UserGroupIcon },
+  { id: "room", label: "Minha sala", icon: UserGroupIcon },
   { id: "settings", label: "Configurações", icon: Settings02Icon },
 ]
 
-export function AppShell({ view, onView, live, title, subtitle, children }: {
+export function AppShell({ view, onView, live, title, subtitle, displayName, children }: {
   view: AppView
+  displayName: string
   onView: (view: AppView) => void
   live: boolean
   title: string
@@ -48,17 +49,17 @@ export function AppShell({ view, onView, live, title, subtitle, children }: {
           <div className="rounded-xl border border-border bg-background/50 p-3">
             <div className="flex items-center gap-2 text-sm font-medium">
               <span className={cn("size-2 rounded-full", live ? "bg-primary" : "bg-muted-foreground")} />
-              {live ? "Transmissão ativa" : "Pronto no Windows"}
+              {live ? "Compartilhando agora" : "Pronto para compartilhar"}
             </div>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {live ? "Você pode ocultar esta janela." : "Feche para a bandeja sem sair."}
+              {live ? "Pode minimizar: a transmissão continua." : "Fechar a janela deixa o 7las na bandeja."}
             </p>
           </div>
           <div className="flex items-center gap-3 px-1">
-            <Avatar size="sm"><AvatarFallback>V</AvatarFallback></Avatar>
+            <Avatar size="sm"><AvatarFallback>{displayName.trim().slice(0, 1).toUpperCase() || "?"}</AvatarFallback></Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">Seu computador</p>
-              <p className="text-xs text-muted-foreground">Identidade local protegida</p>
+              <p className="truncate text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">Seu nome na sala</p>
             </div>
           </div>
         </div>

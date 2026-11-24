@@ -31,3 +31,15 @@ export function isStreamMetadata(value: unknown): value is StreamMetadata {
 export function acceptsStream(metadata: unknown, expected: Omit<StreamMetadata, "kind" | "treeEpoch">, lastEpoch: number): metadata is StreamMetadata {
   return isStreamMetadata(metadata) && metadata.sessionId === expected.sessionId && metadata.originHostId === expected.originHostId && metadata.parentId === expected.parentId && metadata.treeEpoch >= lastEpoch
 }
+
+/** Tela de um convidado: vai direto dele para cada pessoa da sala, fora da árvore do host. */
+export type GuestStreamMetadata = {
+  kind: "guest-screen"
+  sessionId: string
+  ownerId: string
+}
+
+export function isGuestStreamMetadata(value: unknown): value is GuestStreamMetadata {
+  const item = value as GuestStreamMetadata
+  return typeof item === "object" && item !== null && item.kind === "guest-screen" && typeof item.sessionId === "string" && typeof item.ownerId === "string"
+}

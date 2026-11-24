@@ -19,6 +19,12 @@ pub struct AppSettings {
     pub max_direct_slots: u8,
     pub turn_url: String,
     pub turn_username: String,
+    /// Mostrar no perfil do Discord que está no 7las. Desligado por padrão.
+    #[serde(default)]
+    pub discord_presence: bool,
+    /// Botão "Entrar na sala" no status do Discord (mostra o código da sala). Desligado por padrão.
+    #[serde(default)]
+    pub discord_join_button: bool,
 }
 
 impl Default for AppSettings {
@@ -38,6 +44,8 @@ impl Default for AppSettings {
             max_direct_slots: 2,
             turn_url: String::new(),
             turn_username: String::new(),
+            discord_presence: false,
+            discord_join_button: false,
         }
     }
 }

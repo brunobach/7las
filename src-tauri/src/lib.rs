@@ -1,8 +1,10 @@
 mod audio;
+mod discord;
 mod identity;
 mod notifications;
 mod shortcuts;
 mod storage;
+mod toast;
 mod tray;
 
 use identity::Identity;
@@ -176,6 +178,34 @@ fn autostart_set(enabled: bool, app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn discord_available() -> bool {
+    discord::available()
+}
+
+/// Roda fora da thread principal: conectar ao Discord pode demorar um pouco.
+#[tauri::command]
+async fn discord_presence_update(presence: Option<discord::Presence>) -> bool {
+    tauri::async_runtime::spawn_blocking(move || discord::update(presence))
+        .await
+        .unwrap_or(false)
+}
+
+#[tauri::command]
+fn toast_show(height: f64, app: AppHandle) -> Result<(), String> {
+    toast::show(&app, height)
+}
+
+#[tauri::command]
+fn toast_hide(app: AppHandle) {
+    toast::hide(&app)
+}
+
+#[tauri::command]
+fn accept_shortcut_set(enabled: bool, app: AppHandle) -> bool {
+    shortcuts::set_accept(&app, enabled)
+}
+
+#[tauri::command]
 fn shortcut_update(shortcut: String, app: AppHandle) -> Result<(), String> {
     shortcuts::replace(&app, &shortcut)
 }
@@ -227,11 +257,16 @@ fn show_main(app: &AppHandle) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Precisa ser o primeiro plugin: um link sevenlas:// com o app aberto chega na janela que já existe.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            let _ = show_main(app);
+        }))
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, _shortcut, event| {
-                    shortcuts::handle_shortcut(app, event.state());
+                .with_handler(|app, shortcut, event| {
+                    shortcuts::handle_shortcut(app, shortcut, event.state());
                 })
                 .build(),
         )
@@ -248,6 +283,12 @@ pub fn run() {
                 .clone();
             app.manage(state);
             tray::setup(app)?;
+            // O instalador registra o sevenlas://; aqui garantimos também ao rodar sem instalar.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+            }
             shortcuts::register(app.handle(), &shortcut)
                 .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
             if cfg!(debug_assertions) {
@@ -292,6 +333,11 @@ pub fn run() {
             audio_restart_if_target_changed,
             autostart_set,
             shortcut_update,
+            accept_shortcut_set,
+            toast_show,
+            discord_available,
+            discord_presence_update,
+            toast_hide,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

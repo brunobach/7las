@@ -1,155 +1,218 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ComputerScreenShareIcon, Delete01Icon, Link01Icon, ScreenShareIcon, SecurityCheckIcon, UserGroupIcon } from "@hugeicons/core-free-icons"
+import { Delete01Icon, Login03Icon, ScreenShareIcon, UserGroupIcon } from "@hugeicons/core-free-icons"
 import { FriendsDialog } from "@/components/friends-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { formatCodeInput } from "@/lib/lobby"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import type { AppSettings, Friend } from "@/types"
 
-export function HomeScreen({ settings, friends, starting, onStart, onAddFriend, onRemoveFriend, onJoin }: {
+type JoinOptions = { signal?: AbortSignal; onWaiting?: () => void }
+
+export type DiscordOption = { available: boolean; connected: boolean | null; onChange: (enabled: boolean) => void; onJoinButtonChange: (enabled: boolean) => void }
+
+export function HomeScreen({ settings, discord, pendingJoin, friends, starting, onStart, onAddFriend, onRemoveFriend, onJoin }: {
   settings: AppSettings
+  discord: DiscordOption
+  /** Código vindo de um link sevenlas:// (botão do Discord): preenche e já pede para entrar. */
+  pendingJoin: { code: string; nonce: number } | null
   friends: Friend[]
   starting: boolean
   onStart: () => void
   onAddFriend: (friend: Friend) => Promise<void>
   onRemoveFriend: (friendId: string) => Promise<void>
-  onJoin: (invite: string) => Promise<void>
+  onJoin: (invite: string, options?: JoinOptions) => Promise<void>
 }) {
+  const firstName = settings.displayName.trim().split(/\s+/)[0]
   return (
-    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 p-7">
-      <section className="app-enter flex items-end justify-between gap-8 pt-1" aria-labelledby="home-title">
-        <div className="max-w-xl">
-          <h1 id="home-title" className="font-heading text-[30px] leading-tight font-medium tracking-[-0.045em]">Compartilhamento de tela para amigos</h1>
-          <p className="mt-2 max-w-lg text-[15px] leading-6 text-muted-foreground">Escolha um monitor ou janela e transmita para até quatro pessoas na sua sala privada.</p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <JoinDialog onJoin={onJoin} />
-          <Button size="lg" className="h-11 px-5" disabled={starting || settings.audioMode !== "none"} onClick={onStart}>
-            {starting ? <Spinner data-icon="inline-start" /> : <HugeiconsIcon icon={ScreenShareIcon} data-icon="inline-start" />}
-            {starting ? "Abrindo captura" : "Compartilhar tela"}
-          </Button>
-        </div>
+    <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-6 p-7">
+      <section className="app-enter" aria-labelledby="home-title">
+        <h1 id="home-title" className="font-heading text-[28px] leading-tight font-medium tracking-[-0.045em]">Oi, {firstName}. O que vamos fazer?</h1>
+        <p className="mt-1.5 text-[15px] text-muted-foreground">Crie uma sala para mostrar sua tela a até 4 amigos, ou entre na sala de alguém com o código que te mandaram.</p>
       </section>
 
-      {settings.audioMode !== "none" && (
-        <p className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">A captura de áudio WASAPI está em validação. Selecione “Sem áudio” nas configurações para iniciar a transmissão de vídeo.</p>
-      )}
 
-      <div className="grid grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)] gap-5">
-        <Card className="app-enter-media min-h-[370px] gap-0 overflow-hidden border-border/60 py-0 ring-0">
-          <div className="preview-grid relative flex min-h-[370px] flex-1 items-center justify-center overflow-hidden bg-[#121315]">
-            <div className="absolute top-5 left-5 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-muted-foreground" />
-              Prévia da captura
-            </div>
-            <div className="flex max-w-xs flex-col items-center text-center">
-              <div className="mb-5 flex size-16 items-center justify-center rounded-2xl border border-border bg-card/80">
-                <HugeiconsIcon icon={ComputerScreenShareIcon} className="size-7 text-foreground" />
-              </div>
-              <h2 className="font-heading text-lg font-medium tracking-[-0.03em]">Sua tela aparece aqui</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">O Windows perguntará qual monitor ou janela você quer compartilhar.</p>
-            </div>
-            <div className="absolute right-5 bottom-5 flex items-center gap-2 text-xs text-muted-foreground">
-              <HugeiconsIcon icon={SecurityCheckIcon} className="size-4" />
-              DTLS-SRTP em cada conexão
-            </div>
-          </div>
-          <CardFooter className="justify-between border-t border-border bg-card py-4 text-xs text-muted-foreground">
-            <span>{settings.mode === "smooth" ? "Motion · até 60 fps · 8 Mbps" : "Text · até 30 fps · 6 Mbps"}</span>
-            <span>WebRTC + STUN/TURN</span>
-          </CardFooter>
-        </Card>
+      <div className="grid grid-cols-2 gap-5 max-[860px]:grid-cols-1">
+        <ShareCard starting={starting} onStart={onStart} />
+        <JoinCard key={pendingJoin?.nonce ?? "manual"} onJoin={onJoin} initialCode={pendingJoin?.code ?? ""} autoSubmit={Boolean(pendingJoin)} />
+      </div>
 
-        <Card className="min-h-[370px] border-border/60 ring-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><HugeiconsIcon icon={UserGroupIcon} className="size-5 text-muted-foreground" />{settings.roomName}</CardTitle>
-            <CardDescription>Sala privada permanente</CardDescription>
-            <Badge variant="secondary" className="absolute right-6">{friends.length} {friends.length === 1 ? "amigo" : "amigos"}</Badge>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {friends.length === 0 ? (
-              <Empty className="h-full min-h-[180px] border-0 p-3">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon"><HugeiconsIcon icon={UserAddIcon} /></EmptyMedia>
-                  <EmptyTitle className="text-base">Nenhum amigo pareado</EmptyTitle>
-                  <EmptyDescription>Crie um convite e envie para quem poderá entrar nesta sala.</EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <ul className="flex flex-col gap-2" aria-label="Amigos pareados">
-                {friends.map((friend) => (
-                  <li key={friend.friendId} className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-2.5">
-                    <Avatar size="sm"><AvatarFallback>{friend.displayName.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{friend.displayName}</p>
-                      <p className="text-xs text-muted-foreground">Pareado · presença offline</p>
-                    </div>
-                    <Button variant="ghost" size="icon-sm" aria-label={`Remover ${friend.displayName}`} onClick={() => void onRemoveFriend(friend.friendId)}><HugeiconsIcon icon={Delete01Icon} /></Button>
-                  </li>
-                ))}
-              </ul>
-            )}
+      <Card className="border-border/60 ring-0">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><HugeiconsIcon icon={UserGroupIcon} className="size-5 text-muted-foreground" />Amigos</CardTitle>
+          <CardDescription>Guarde quem você chama sempre para reconhecer na hora em que pedirem para entrar.</CardDescription>
+          <CardAction><Badge variant="secondary">{friends.length} {friends.length === 1 ? "amigo" : "amigos"}</Badge></CardAction>
+        </CardHeader>
+        {friends.length > 0 && (
+          <CardContent>
+            <ul className="grid grid-cols-2 gap-2 max-[860px]:grid-cols-1" aria-label="Amigos">
+              {friends.map((friend) => (
+                <li key={friend.friendId} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-2.5">
+                  <Avatar size="sm"><AvatarFallback>{friend.displayName.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium">{friend.displayName}</p>
+                  <Button variant="ghost" size="icon-sm" aria-label={`Remover ${friend.displayName}`} onClick={() => void onRemoveFriend(friend.friendId)}><HugeiconsIcon icon={Delete01Icon} /></Button>
+                </li>
+              ))}
+            </ul>
           </CardContent>
-          <CardFooter className="border-t border-border pt-4">
-            <FriendsDialog displayName={settings.displayName} onAdd={onAddFriend} />
-          </CardFooter>
-        </Card>
-      </div>
+        )}
+        <CardFooter className="border-t border-border pt-4">
+          <FriendsDialog settings={settings} onAdd={onAddFriend} />
+        </CardFooter>
+      </Card>
 
-      <div className="flex items-center gap-5 text-xs text-muted-foreground">
-        <span className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-primary" />2 saídas diretas por padrão</span>
-        <span>Relays somente com consentimento</span>
-        <span>Máximo de 2 saltos</span>
-      </div>
+      <DiscordCard enabled={settings.discordPresence} joinButton={settings.discordJoinButton} option={discord} />
     </div>
   )
 }
 
-function JoinDialog({ onJoin }: { onJoin: (invite: string) => Promise<void> }) {
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState("")
+const SHARE_STEPS = [
+  "Crie a sala e mande o código para seus amigos.",
+  "Aceite quem pedir para entrar.",
+  "Compartilhe a tela quando todos estiverem prontos.",
+]
 
-  const join = async () => {
-    setBusy(true)
-    setError("")
-    try {
-      await onJoin(value)
-      setOpen(false)
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Não foi possível entrar na transmissão.")
-    } finally {
-      setBusy(false)
-    }
-  }
-
+function ShareCard({ starting, onStart }: { starting: boolean; onStart: () => void }) {
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="lg" className="h-11" />}><HugeiconsIcon icon={Link01Icon} data-icon="inline-start" />Entrar com convite</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Entrar em uma transmissão</DialogTitle>
-          <DialogDescription>Cole o convite completo enviado pelo host. Ele contém o segredo efêmero desta sessão.</DialogDescription>
-        </DialogHeader>
-        <FieldGroup>
-          <Field data-invalid={!!error}>
-            <FieldLabel htmlFor="session-invite">Convite da sessão</FieldLabel>
-            <Input id="session-invite" value={value} onChange={(event) => setValue(event.target.value)} placeholder="Cole o convite recebido" aria-invalid={!!error} />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </Field>
-          <Button disabled={busy || !value.trim()} onClick={() => void join()}>{busy && <Spinner data-icon="inline-start" />}Assistir transmissão</Button>
-        </FieldGroup>
-      </DialogContent>
-    </Dialog>
+    <Card className="app-enter-media border-primary/40 ring-0">
+      <CardHeader>
+        <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground" aria-hidden><HugeiconsIcon icon={ScreenShareIcon} className="size-5" /></span>
+        <CardTitle className="text-lg">Criar uma sala</CardTitle>
+        <CardDescription>Uma sala só sua. Só entra quem você aceitar.</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <ol className="flex flex-col gap-2.5">
+          {SHARE_STEPS.map((step, index) => (
+            <li key={step} className="flex items-start gap-3 text-sm">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-secondary text-[11px] font-medium tabular-nums">{index + 1}</span>
+              <span className="text-muted-foreground">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+      <CardFooter>
+        <Button size="lg" className="h-11 w-full" disabled={starting} onClick={onStart}>
+          {starting ? <Spinner data-icon="inline-start" /> : <HugeiconsIcon icon={UserGroupIcon} data-icon="inline-start" />}
+          {starting ? "Abrindo a sala…" : "Criar sala"}
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
 
-const UserAddIcon = UserGroupIcon
+function JoinCard({ onJoin, initialCode, autoSubmit }: { onJoin: (invite: string, options?: JoinOptions) => Promise<void>; initialCode: string; autoSubmit: boolean }) {
+  const [value, setValue] = useState(() => formatCodeInput(initialCode))
+  const [busy, setBusy] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  const [error, setError] = useState("")
+  const abort = useRef<AbortController | null>(null)
+
+  const join = async () => {
+    if (!value.trim() || busy) return
+    const controller = new AbortController()
+    abort.current = controller
+    setBusy(true)
+    setError("")
+    try {
+      await onJoin(value, { signal: controller.signal, onWaiting: () => setWaiting(true) })
+      setValue("")
+    } catch (reason) {
+      if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Não foi possível entrar na sala.")
+    } finally {
+      abort.current = null
+      setBusy(false)
+      setWaiting(false)
+    }
+  }
+
+  // Veio de um link: pede para entrar sozinho, uma vez.
+  const joinRef = useRef(join)
+  useEffect(() => {
+    joinRef.current = join
+  })
+  useEffect(() => {
+    if (!autoSubmit) return
+    const timer = window.setTimeout(() => void joinRef.current(), 0)
+    return () => window.clearTimeout(timer)
+  }, [autoSubmit])
+
+  return (
+    <Card className="app-enter-media border-border/60 ring-0">
+      <CardHeader>
+        <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-secondary" aria-hidden><HugeiconsIcon icon={Login03Icon} className="size-5" /></span>
+        <CardTitle className="text-lg">Entrar na sala de um amigo</CardTitle>
+        <CardDescription>Digite o código que te mandaram. Pode colar a mensagem inteira.</CardDescription>
+      </CardHeader>
+      {waiting ? (
+        <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 py-2 text-center" role="status">
+          <Spinner className="size-6" />
+          <div>
+            <p className="text-sm font-medium">Esperando seu amigo aceitar</p>
+            <p className="mt-1 text-sm text-muted-foreground">Ele vê seu nome e decide se você entra.</p>
+          </div>
+          <Button variant="outline" onClick={() => abort.current?.abort()}>Cancelar pedido</Button>
+        </CardContent>
+      ) : (
+        <>
+          <CardContent className="flex flex-1 flex-col gap-2">
+            <label htmlFor="session-invite" className="text-sm font-medium">Código da sala</label>
+            <Input
+              id="session-invite"
+              value={value}
+              onChange={(event) => setValue(formatCodeInput(event.target.value))}
+              onKeyDown={(event) => event.key === "Enter" && void join()}
+              placeholder="KX7P-42QM"
+              autoComplete="off"
+              spellCheck={false}
+              className="h-12 text-center font-mono text-lg tracking-[0.15em] uppercase placeholder:tracking-[0.15em]"
+              aria-invalid={!!error}
+              aria-describedby={error ? "session-invite-error" : undefined}
+            />
+            {error && <p id="session-invite-error" className="text-sm text-destructive">{error}</p>}
+          </CardContent>
+          <CardFooter>
+            <Button size="lg" variant="secondary" className="h-11 w-full" disabled={busy || !value.trim()} onClick={() => void join()}>
+              {busy && <Spinner data-icon="inline-start" />}Pedir para entrar
+            </Button>
+          </CardFooter>
+        </>
+      )}
+    </Card>
+  )
+}
+
+function DiscordCard({ enabled, joinButton, option }: { enabled: boolean; joinButton: boolean; option: DiscordOption }) {
+  const status = !option.available
+    ? "Indisponível nesta versão do app."
+    : !enabled
+      ? "Seus amigos do Discord veem no seu perfil quando você está no 7las."
+      : option.connected === false
+        ? "Ligado, mas o Discord não está aberto neste computador. Assim que abrir, o status aparece."
+        : "Ligado. Seu perfil mostra “Jogando 7las” e, numa sala, quantas pessoas estão com você."
+  const active = enabled && option.available
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card px-5 py-4">
+      <div className="flex items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <label htmlFor="discord-presence" className="text-sm font-medium">Mostrar no Discord</label>
+          <p className="mt-0.5 text-xs text-muted-foreground">{status}</p>
+        </div>
+        <Switch id="discord-presence" checked={active} disabled={!option.available} onCheckedChange={option.onChange} />
+      </div>
+      {active && (
+        <div className="flex items-center gap-4 border-t border-border pt-3">
+          <div className="min-w-0 flex-1">
+            <label htmlFor="discord-join" className="text-sm font-medium">Botão “Entrar na sala”</label>
+            <p className="mt-0.5 text-xs text-muted-foreground">Quando você criar uma sala, quem olhar seu perfil pode pedir para entrar por um botão. Você ainda aceita cada pedido. O código da sala fica visível no link.</p>
+          </div>
+          <Switch id="discord-join" checked={joinButton} onCheckedChange={option.onJoinButtonChange} />
+        </div>
+      )}
+    </div>
+  )
+}

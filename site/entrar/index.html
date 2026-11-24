@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Entrar na sala · 7las</title>
+  <meta name="description" content="Abra o 7las para pedir para entrar na sala de um amigo.">
+  <style>
+    :root {
+      --bg: #f6f5f4;
+      --card: #ffffff;
+      --text: #17181a;
+      --muted: #62656b;
+      --border: #e3e1df;
+      --primary: #ff4d1f;
+      --primary-text: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121315;
+        --card: #1b1c1f;
+        --text: #f2f2f3;
+        --muted: #a0a3a9;
+        --border: #2c2e32;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    main {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.02em; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 10px; background: var(--primary);
+      display: grid; place-items: center;
+    }
+    .mark span { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--primary-text); display: grid; place-items: center; }
+    .mark span::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--primary-text); }
+    h1 { margin: 24px 0 6px; font-size: 22px; line-height: 1.25; letter-spacing: -0.03em; }
+    p { margin: 0; color: var(--muted); }
+    .code {
+      margin: 22px 0;
+      padding: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      text-align: center;
+      font: 600 30px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace;
+      letter-spacing: 0.14em;
+      user-select: all;
+    }
+    .actions { display: flex; flex-direction: column; gap: 10px; }
+    a.button, button {
+      display: block; width: 100%; padding: 12px 16px; border-radius: 999px;
+      font: inherit; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer;
+      border: 1px solid var(--border); background: transparent; color: var(--text);
+    }
+    a.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-text); }
+    a.button:focus-visible, button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 2px; }
+    .help { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; }
+    .help a { color: var(--text); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><span class="mark" aria-hidden="true"><span></span></span>7las</div>
+
+    <section id="with-code" hidden>
+      <h1>Entrar na sala do seu amigo</h1>
+      <p>O 7las vai abrir e pedir para entrar. Seu amigo aceita e você já vê a tela dele.</p>
+      <div class="code" id="code" aria-label="Código da sala"></div>
+      <div class="actions">
+        <a class="button primary" id="open">Abrir no 7las</a>
+        <button type="button" id="copy">Copiar código</button>
+      </div>
+      <div class="help">
+        <p>Não abriu? No 7las, use “Entrar na sala de um amigo” e digite o código acima.</p>
+        <p style="margin-top:8px">Ainda não tem o 7las? <a href="https://github.com/brunobach/7las/releases/latest">Baixe aqui</a>.</p>
+      </div>
+    </section>
+
+    <section id="without-code" hidden>
+      <h1>Este link está incompleto</h1>
+      <p>Falta o código da sala. Peça para seu amigo mandar o código de novo, ou abra o perfil dele no Discord e clique em “Entrar na sala”.</p>
+    </section>
+  </main>
+  <script>
+    // Mesmo alfabeto do app: sem 0/O e 1/I/L.
+    const raw = new URLSearchParams(location.search).get("codigo") || ""
+    const code = raw.toUpperCase().replace(/[^0-9A-Z]/g, "")
+    const valid = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/.test(code)
+    document.getElementById(valid ? "with-code" : "without-code").hidden = false
+    if (valid) {
+      const pretty = code.slice(0, 4) + "-" + code.slice(4)
+      const link = "sevenlas://entrar/" + code
+      document.getElementById("code").textContent = pretty
+      document.getElementById("open").href = link
+      const copy = document.getElementById("copy")
+      copy.addEventListener("click", () => {
+        navigator.clipboard?.writeText(pretty).then(() => {
+          copy.textContent = "Código copiado"
+          setTimeout(() => { copy.textContent = "Copiar código" }, 1600)
+        }, () => undefined)
+      })
+      // Tenta abrir o app sozinho; o navegador pergunta antes de abrir.
+      setTimeout(() => { location.href = link }, 300)
+    }
+  </script>
+</body>
+</html>

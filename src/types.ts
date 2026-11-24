@@ -17,6 +17,23 @@ export type AppSettings = {
   maxDirectSlots: number
   turnUrl: string
   turnUsername: string
+  /** Mostrar no perfil do Discord que está no 7las (sem o código da sala). */
+  discordPresence: boolean
+  /** Botão "Entrar na sala" no status do Discord, com o código curto da sala. */
+  discordJoinButton: boolean
+}
+
+/** Som junto com a tela: "system" liga, "none" desliga (os outros modos eram do áudio nativo antigo). */
+export function wantsAudio(settings: Pick<AppSettings, "audioMode">): boolean {
+  return settings.audioMode !== "none"
+}
+
+/** Nome padrão antes do primeiro acesso. Não serve como nome de verdade: os amigos veriam "Você". */
+export const PLACEHOLDER_NAME = "Você"
+
+export function hasRealName(name: string): boolean {
+  const trimmed = name.trim()
+  return trimmed.length > 0 && trimmed.toLocaleLowerCase("pt-BR") !== PLACEHOLDER_NAME.toLocaleLowerCase("pt-BR")
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -34,6 +51,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   maxDirectSlots: 2,
   turnUrl: "",
   turnUsername: "",
+  discordPresence: false,
+  discordJoinButton: false,
 }
 
 export type Friend = {

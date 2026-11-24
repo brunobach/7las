@@ -93,4 +93,15 @@ describe("TreeCoordinator", () => {
     expect(assignments[0]?.parentId).toBe("B")
     expect(assignments[0]?.reason).toBe("recovery")
   })
+
+  it("reenvia a atribuição com a época em que o nó foi atribuído", () => {
+    const tree = new TreeCoordinator("host", "session", 2)
+    const first = tree.addNode({ nodeId: "A", relayEnabled: false, relaySlots: 0 }, 0)
+    tree.addNode({ nodeId: "B", relayEnabled: false, relaySlots: 0 }, 0)
+    const resent = tree.assignmentOf("A")
+    expect(resent?.parentId).toBe("host")
+    expect(resent?.treeEpoch).toBe(first?.treeEpoch)
+    expect(tree.treeEpoch).toBeGreaterThan(resent!.treeEpoch)
+    expect(tree.assignmentOf("missing")).toBeNull()
+  })
 })

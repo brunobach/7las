@@ -75,3 +75,40 @@ export async function setAutostart(enabled: boolean): Promise<void> {
 export async function updateShortcut(shortcut: string): Promise<void> {
   if (isTauri) await invoke("shortcut_update", { shortcut })
 }
+
+export const ACCEPT_SHORTCUT = "Ctrl+Shift+A"
+
+/** Liga o atalho global de aceitar enquanto houver pedidos. Retorna se ele está ativo. */
+export async function setAcceptShortcut(enabled: boolean): Promise<boolean> {
+  if (!isTauri) return false
+  return invoke<boolean>("accept_shortcut_set", { enabled })
+}
+
+export type ToastItem = { id: string; title: string; body?: string; accept: string; deny: string }
+
+/** Mostra (ou atualiza) o aviso próprio do 7las no canto da tela, por cima de tudo. */
+export async function showToast(items: ToastItem[]): Promise<void> {
+  if (!isTauri) return
+  if (!items.length) {
+    await invoke("toast_hide")
+    return
+  }
+  const height = 52 + items.length * 104
+  await invoke("toast_show", { height })
+  const { emit } = await import("@tauri-apps/api/event")
+  await emit("toast://items", items)
+}
+
+export type DiscordPresence = { details: string; state: string; startedAt: number; partySize: number; partyMax: number; joinCode?: string | null }
+
+/** Se este build tem o ID do app do Discord configurado. */
+export async function discordAvailable(): Promise<boolean> {
+  if (!isTauri) return false
+  return invoke<boolean>("discord_available").catch(() => false)
+}
+
+/** Atualiza o status no Discord (`null` limpa). Retorna falso se o Discord estiver fechado. */
+export async function updateDiscordPresence(presence: DiscordPresence | null): Promise<boolean> {
+  if (!isTauri) return false
+  return invoke<boolean>("discord_presence_update", { presence }).catch(() => false)
+}

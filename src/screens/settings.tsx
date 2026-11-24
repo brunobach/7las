@@ -11,6 +11,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ACCEPT_SHORTCUT } from "@/lib/desktop"
+import { hasRealName } from "@/types"
 import type { AppSettings } from "@/types"
 
 export function SettingsScreen({ settings, onSave }: { settings: AppSettings; onSave: (settings: AppSettings) => Promise<void> }) {
@@ -25,8 +27,16 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
       setError("Preencha seu nome e o nome da sala.")
       return
     }
+    if (!hasRealName(draft.displayName)) {
+      setError("Escolha um nome que seus amigos reconheçam.")
+      return
+    }
     if (!/^(Ctrl|Alt|Shift)(\+(Ctrl|Alt|Shift))*\+[A-Z0-9]$/.test(draft.globalShortcut)) {
       setError("Use um atalho como Ctrl+Shift+S, com uma letra ou número ao final.")
+      return
+    }
+    if (draft.globalShortcut === ACCEPT_SHORTCUT) {
+      setError(`${ACCEPT_SHORTCUT} já é usado para aceitar pedidos de entrada. Escolha outro atalho.`)
       return
     }
     setSaving(true)
@@ -75,8 +85,8 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
             <CardContent>
               <FieldGroup>
                 <Field><FieldLabel>Modo de qualidade</FieldLabel><ToggleGroup variant="outline" value={[draft.mode]} onValueChange={(value) => value[0] && patch({ mode: value[0] as AppSettings["mode"] })}><ToggleGroupItem value="sharp">Text · 30 fps</ToggleGroupItem><ToggleGroupItem value="smooth">Motion · 60 fps</ToggleGroupItem></ToggleGroup><FieldDescription>Até {draft.mode === "sharp" ? "6" : "8"} Mbps por saída, sujeito à rede.</FieldDescription></Field>
-                <Field><FieldLabel>Fonte de áudio</FieldLabel><Select value={draft.audioMode} onValueChange={(value) => patch({ audioMode: value as AppSettings["audioMode"] })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="none">Sem áudio</SelectItem><SelectItem value="process" disabled>Somente aplicativo/jogo · em validação</SelectItem><SelectItem value="system_except_discord" disabled>Sistema sem Discord · em validação</SelectItem><SelectItem value="system" disabled>Sistema inteiro · em validação</SelectItem></SelectGroup></SelectContent></Select><FieldDescription>O microfone não é capturado. Relays nunca misturam o áudio local.</FieldDescription></Field>
-                <Alert><HugeiconsIcon icon={InformationCircleIcon} /><AlertTitle>Áudio nativo no gate técnico</AlertTitle><AlertDescription>A ponte WASAPI para WebRTC será liberada depois dos testes de exclusão por processo e sincronia previstos na especificação.</AlertDescription></Alert>
+                <Field orientation="horizontal"><FieldContent><FieldLabel htmlFor="share-audio">Compartilhar o som junto</FieldLabel><FieldDescription>Leva o som do computador (jogo, vídeo, música) junto com a tela. O microfone nunca é enviado.</FieldDescription></FieldContent><Switch id="share-audio" checked={draft.audioMode !== "none"} onCheckedChange={(checked) => patch({ audioMode: checked ? "system" : "none" })} /></Field>
+                <Alert><HugeiconsIcon icon={InformationCircleIcon} /><AlertTitle>Como o som funciona</AlertTitle><AlertDescription>O Windows só envia som quando você escolhe uma <strong>tela inteira</strong> no seletor e deixa marcado “Compartilhar áudio do sistema”. Janelas sozinhas vão sem som.</AlertDescription></Alert>
               </FieldGroup>
             </CardContent>
           </Card>

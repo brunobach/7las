@@ -19,15 +19,21 @@ export async function roomName(secret: string): Promise<string> {
   return Array.from(hash.subarray(0, 16), (byte) => byte.toString(16).padStart(2, "0")).join("")
 }
 
+const EMBEDDED = /(?:^|[^0-9A-Za-z~])([0-9A-Za-z]{22})~([0-9A-Za-z]{22})(?![0-9A-Za-z~])/
+
+/** Aceita o código puro, um link com `#código` ou a mensagem de convite inteira colada. */
 export function parseSessionInvite(value: string): SessionInvite {
-  const hash = value.trim().includes("#") ? value.trim().slice(value.trim().indexOf("#") + 1) : value.trim()
-  const [secret, hostId, ...rest] = hash.split("~")
-  if (rest.length || !ID.test(secret ?? "") || !ID.test(hostId ?? "")) {
-    throw new Error("O convite está incompleto ou inválido.")
+  const match = EMBEDDED.exec(value.trim())
+  if (!match || !ID.test(match[1]) || !ID.test(match[2])) {
+    throw new Error("Esse convite está incompleto ou não é válido. Peça para quem está compartilhando copiar o convite de novo.")
   }
-  return { secret, hostId }
+  return { secret: match[1], hostId: match[2] }
 }
 
 export function sessionInviteCode(invite: SessionInvite): string {
   return `${invite.secret}~${invite.hostId}`
+}
+
+export function inviteMessage(code: string): string {
+  return `Vem ver minha tela no 7las! Abra o app, clique em "Entrar com convite" e cole esta mensagem.\n\n${code}`
 }

@@ -31,6 +31,7 @@ type TreeNode = JoinNode & {
   stable: boolean
   metrics: NodeMetrics | null
   lastMigrationAt: number
+  epoch: number
 }
 
 const COOLDOWN_MS = 30_000
@@ -50,7 +51,7 @@ export class TreeCoordinator {
     this.sessionId = sessionId
     this.directSlots = directSlots
     this.targetBitrate = targetBitrate
-    this.nodes.set(hostId, { nodeId: hostId, parentId: null, relayEnabled: true, relaySlots: directSlots, stable: true, metrics: null, lastMigrationAt: 0 })
+    this.nodes.set(hostId, { nodeId: hostId, parentId: null, relayEnabled: true, relaySlots: directSlots, stable: true, metrics: null, lastMigrationAt: 0, epoch: 0 })
   }
 
   get treeEpoch(): number {
@@ -63,10 +64,16 @@ export class TreeCoordinator {
 
   addNode(input: JoinNode, now = Date.now()): TreeAssignment | null {
     if (this.nodes.has(input.nodeId)) throw new Error("O participante já está na árvore.")
-    this.nodes.set(input.nodeId, { ...input, parentId: null, stable: false, metrics: null, lastMigrationAt: 0 })
+    this.nodes.set(input.nodeId, { ...input, parentId: null, stable: false, metrics: null, lastMigrationAt: 0, epoch: 0 })
     const parent = this.chooseParent(input.nodeId, now, false, false)
     if (!parent) return null
     return this.assign(input.nodeId, parent, "join", now)
+  }
+
+  /** Reenvia a atribuição atual de um nó (com a época em que foi atribuído). */
+  assignmentOf(nodeId: string): TreeAssignment | null {
+    const node = this.nodes.get(nodeId)
+    return node?.parentId ? this.assignmentFor(node, "recovery") : null
   }
 
   recoverNode(nodeId: string, now = Date.now()): TreeAssignment | null {
@@ -157,6 +164,7 @@ export class TreeCoordinator {
     node.parentId = parentId
     node.lastMigrationAt = now
     this.epoch += 1
+    node.epoch = this.epoch
     return this.assignmentFor(node, reason)
   }
 
@@ -165,7 +173,7 @@ export class TreeCoordinator {
     return {
       type: "tree.assign",
       sessionId: this.sessionId,
-      treeEpoch: this.epoch,
+      treeEpoch: node.epoch,
       childId: node.nodeId,
       parentId,
       parentTrysteroId: parentId,
