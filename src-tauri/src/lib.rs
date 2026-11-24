@@ -190,23 +190,25 @@ async fn discord_presence_update(presence: Option<discord::Presence>) -> bool {
         .unwrap_or(false)
 }
 
+// Assíncronos de propósito: criar janela ou registrar atalho num comando síncrono
+// roda na thread principal e trava o app no Windows (seletor de tela, bandeja, fechar).
 #[tauri::command]
-fn toast_show(height: f64, app: AppHandle) -> Result<(), String> {
+async fn toast_show(height: f64, app: AppHandle) -> Result<(), String> {
     toast::show(&app, height)
 }
 
 #[tauri::command]
-fn toast_hide(app: AppHandle) {
+async fn toast_hide(app: AppHandle) {
     toast::hide(&app)
 }
 
 #[tauri::command]
-fn accept_shortcut_set(enabled: bool, app: AppHandle) -> bool {
+async fn accept_shortcut_set(enabled: bool, app: AppHandle) -> bool {
     shortcuts::set_accept(&app, enabled)
 }
 
 #[tauri::command]
-fn shortcut_update(shortcut: String, app: AppHandle) -> Result<(), String> {
+async fn shortcut_update(shortcut: String, app: AppHandle) -> Result<(), String> {
     shortcuts::replace(&app, &shortcut)
 }
 
