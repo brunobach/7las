@@ -1,3 +1,4 @@
+import { validAvatarSeed } from "@/lib/avatar"
 import { applyContentHint, captureScreen, newCaptureController } from "@/lib/capture"
 import { LobbyHost, type KnockRequest } from "@/lib/lobby"
 import { newSecret, parseSessionInvite, sessionInviteCode, type SessionInvite } from "@/lib/link"
@@ -15,6 +16,7 @@ export type SessionStatus = "connecting" | "waiting" | "live" | "reconnecting" |
 export type ViewerInfo = {
   id: string
   name: string
+  avatar: number
   parentId: string | null
   relayEnabled: boolean
   children: string[]
@@ -24,6 +26,7 @@ export type ViewerInfo = {
 export type Participant = {
   id: string
   name: string
+  avatar: number
   role: "host" | "viewer"
   self: boolean
   watching: boolean | null
@@ -35,6 +38,7 @@ type Hello = { sessionId: string; hasVideo: boolean }
 export type StageScreen = {
   id: string
   name: string
+  avatar: number
   stream: MediaStream
   self: boolean
   host: boolean
@@ -203,15 +207,16 @@ export class MediaSession {
   /** Todas as telas da sala, com a do host primeiro. */
   get screens(): StageScreen[] {
     const nameOf = (id: string) => (this.session.profiles.has(id) ? this.session.profiles.get(id).name : "") || "Convidado"
+    const avatarOf = (id: string, self = false) => validAvatarSeed(self ? this.settings.avatarSeed : this.session.profiles.has(id) ? this.session.profiles.get(id).avatar : 0, id)
     const list: StageScreen[] = []
     const hostStream = this.role === "host" ? this.out : this.incoming.stream
     if (hostStream && this.hostSharing) {
       const hostName = this.role === "host" ? this.settings.displayName : this.session.live.get().hostName || nameOf(this.hostId)
-      list.push({ id: this.hostId, name: hostName, stream: hostStream, self: this.role === "host", host: true })
+      list.push({ id: this.hostId, name: hostName, avatar: avatarOf(this.hostId, this.role === "host"), stream: hostStream, self: this.role === "host", host: true })
     }
-    if (this.guestScreen) list.push({ id: this.selfId, name: this.settings.displayName, stream: this.guestScreen, self: true, host: false })
+    if (this.guestScreen) list.push({ id: this.selfId, name: this.settings.displayName, avatar: this.settings.avatarSeed, stream: this.guestScreen, self: true, host: false })
     for (const [id, stream] of this.guestStreams) {
-      if (!this.gone.has(id)) list.push({ id, name: nameOf(id), stream, self: false, host: false })
+      if (!this.gone.has(id)) list.push({ id, name: nameOf(id), avatar: avatarOf(id), stream, self: false, host: false })
     }
     return list
   }
@@ -260,7 +265,7 @@ export class MediaSession {
     const relay = this.role === "viewer"
     return this.session.profiles.set({
       name: this.settings.displayName,
-      avatar: 0,
+      avatar: this.settings.avatarSeed,
       relayEnabled: relay && this.settings.relayEnabled,
       relaySlots: relay ? this.settings.relaySlots : 0,
       sharing: Boolean(this.guestScreen),
@@ -321,6 +326,7 @@ export class MediaSession {
     return Array.from(this.coordinator.nodes.values()).filter((node) => node.nodeId !== this.hostId).map((node) => ({
       id: node.nodeId,
       name: this.session.profiles.has(node.nodeId) ? this.session.profiles.get(node.nodeId).name : "Conectando…",
+      avatar: validAvatarSeed(this.session.profiles.has(node.nodeId) ? this.session.profiles.get(node.nodeId).avatar : 0, node.nodeId),
       parentId: node.parentId,
       relayEnabled: node.relayEnabled,
       children: Array.from(this.coordinator!.nodes.values()).filter((child) => child.parentId === node.nodeId).map((child) => child.nodeId),
@@ -331,8 +337,9 @@ export class MediaSession {
 
   get participants(): Participant[] {
     const nameOf = (id: string) => (this.session.profiles.has(id) ? this.session.profiles.get(id).name : "") || "Entrando…"
+    const avatarOf = (id: string, self = false) => validAvatarSeed(self ? this.settings.avatarSeed : this.session.profiles.has(id) ? this.session.profiles.get(id).avatar : 0, id)
     const hostName = this.role === "host" ? this.settings.displayName : this.session.live.get().hostName || nameOf(this.hostId)
-    const host: Participant = { id: this.hostId, name: hostName || "Anfitrião", role: "host", self: this.role === "host", watching: null, sharing: this.hostSharing }
+    const host: Participant = { id: this.hostId, name: hostName || "Anfitrião", avatar: avatarOf(this.hostId, this.role === "host"), role: "host", self: this.role === "host", watching: null, sharing: this.hostSharing }
     const others = this.presentUsers()
       .filter((id) => id !== this.hostId)
       .map((id): Participant => {
@@ -340,10 +347,10 @@ export class MediaSession {
         const fps = this.coordinator?.nodes.get(id)?.metrics?.framesPerSecond
         const watching = self ? this.status === "live" : this.role === "host" && typeof fps === "number" ? fps > 0 : null
         const sharing = self ? Boolean(this.guestScreen) : this.guestStreams.has(id)
-        return { id, name: self ? this.settings.displayName : nameOf(id), role: "viewer", self, watching, sharing }
+        return { id, name: self ? this.settings.displayName : nameOf(id), avatar: avatarOf(id, self), role: "viewer", self, watching, sharing }
       })
     if (this.role === "viewer" && !others.some((item) => item.self)) {
-      others.push({ id: this.selfId, name: this.settings.displayName, role: "viewer", self: true, watching: this.status === "live", sharing: Boolean(this.guestScreen) })
+      others.push({ id: this.selfId, name: this.settings.displayName, avatar: this.settings.avatarSeed, role: "viewer", self: true, watching: this.status === "live", sharing: Boolean(this.guestScreen) })
     }
     others.sort((a, b) => Number(b.self) - Number(a.self) || a.name.localeCompare(b.name))
     return [host, ...others]
@@ -399,6 +406,14 @@ export class MediaSession {
     this.settings = { ...this.settings, mode }
     if (this.screen) applyContentHint(this.screen.getVideoTracks()[0], mode)
     setPeerMode(mode)
+    this.onChange()
+  }
+
+  updateSettings(settings: AppSettings): void {
+    this.settings = settings
+    if (this.stopped) return
+    void this.setProfile().catch(() => undefined)
+    if (this.role === "host") void this.publishLive(this.status !== "ended").catch(() => undefined)
     this.onChange()
   }
 

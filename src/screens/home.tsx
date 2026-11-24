@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete01Icon, Login03Icon, ScreenShareIcon, UserGroupIcon } from "@hugeicons/core-free-icons"
 import { FriendsDialog } from "@/components/friends-dialog"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { UserAvatar } from "@/components/user-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,7 +53,7 @@ export function HomeScreen({ settings, discord, pendingJoin, friends, starting, 
             <ul className="grid grid-cols-2 gap-2 max-[860px]:grid-cols-1" aria-label="Amigos">
               {friends.map((friend) => (
                 <li key={friend.friendId} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-2.5">
-                  <Avatar size="sm"><AvatarFallback>{friend.displayName.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
+                  <UserAvatar seed={friend.avatarSeed} name={friend.displayName} size="sm" />
                   <p className="min-w-0 flex-1 truncate text-sm font-medium">{friend.displayName}</p>
                   <Button variant="ghost" size="icon-sm" aria-label={`Remover ${friend.displayName}`} onClick={() => void onRemoveFriend(friend.friendId)}><HugeiconsIcon icon={Delete01Icon} /></Button>
                 </li>
@@ -79,9 +79,9 @@ const SHARE_STEPS = [
 
 function ShareCard({ starting, onStart }: { starting: boolean; onStart: () => void }) {
   return (
-    <Card className="app-enter-media border-primary/40 ring-0">
+    <Card className="app-enter-media border-border ring-0">
       <CardHeader>
-        <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground" aria-hidden><HugeiconsIcon icon={ScreenShareIcon} className="size-5" /></span>
+        <span className="mb-1 flex size-11 items-center justify-center rounded-lg bg-secondary text-foreground" aria-hidden><HugeiconsIcon icon={ScreenShareIcon} className="size-5" /></span>
         <CardTitle className="text-lg">Criar uma sala</CardTitle>
         <CardDescription>Uma sala só sua. Só entra quem você aceitar.</CardDescription>
       </CardHeader>

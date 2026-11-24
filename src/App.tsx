@@ -54,6 +54,12 @@ export default function App() {
 
   const notify = useCallback((next: SessionNotice) => setNotice(next), [])
   const refresh = useCallback(() => setRevision((value) => value + 1), [])
+  const persistSettings = useCallback(async (next: AppSettings) => {
+    const saved = await saveSettings(next)
+    setSettings(saved)
+    sessionRef.current?.updateSettings(saved)
+    return saved
+  }, [])
 
   useEffect(() => {
     void Promise.all([getSettings(), listFriends()]).then(([loadedSettings, loadedFriends]) => {
@@ -230,6 +236,7 @@ export default function App() {
     ...knocks.map((request) => ({
       id: `knock:${request.id}`,
       title: `${request.name} quer entrar na sua sala`,
+      avatar: request.avatar,
       body: acceptShortcut ? `Aperte ${ACCEPT_SHORTCUT} para aceitar de qualquer lugar.` : undefined,
       accept: "Aceitar",
       deny: "Recusar",
@@ -380,7 +387,7 @@ export default function App() {
   if (!hasRealName(settings.displayName)) {
     return (
       <>
-        <WelcomeScreen onSave={async (displayName) => setSettings(await saveSettings({ ...settings, displayName }))} />
+        <WelcomeScreen settings={settings} onSave={async (displayName, avatarSeed) => { await persistSettings({ ...settings, displayName, avatarSeed }) }} />
         <Notice notice={notice} />
       </>
     )
@@ -391,7 +398,7 @@ export default function App() {
 
   return (
     <>
-      <AppShell view={view} onView={setView} live={session?.role === "host" ? session.sharing : session?.status === "live"} displayName={settings.displayName} title={title} subtitle={subtitle}>
+      <AppShell view={view} onView={setView} live={session?.role === "host" ? session.sharing : session?.status === "live"} settings={settings} onSave={async (next) => { await persistSettings(next) }} title={title} subtitle={subtitle}>
         {view === "home" && <HomeScreen settings={settings} discord={{ available: discordReady, connected: settings.discordPresence ? discordConnected : null, onChange: (enabled) => void setDiscord({ discordPresence: enabled }), onJoinButtonChange: (enabled) => void setDiscord({ discordJoinButton: enabled }) }} pendingJoin={pendingJoin} friends={friends} starting={starting} onStart={() => void start()} onJoin={join} onAddFriend={async (friend) => {
           setFriends(await addFriend(friend))
           notify({ tone: "success", title: `${friend.displayName} foi adicionado` })
@@ -400,10 +407,9 @@ export default function App() {
           notify({ tone: "info", title: "Amigo removido" })
         }} />}
         {view === "settings" && <SettingsScreen settings={settings} onSave={async (next) => {
-          const saved = await saveSettings(next)
+          const saved = await persistSettings(next)
           await setAutostart(saved.startWithWindows)
           await updateShortcut(saved.globalShortcut)
-          setSettings(saved)
           notify({ tone: "success", title: "Configurações salvas" })
         }} />}
         {view === "room" && (session?.role === "viewer" ? <ViewerScreen session={session} audio={wantsAudio(settings)} onAudioChange={(enabled) => void setAudio(enabled)} onStop={() => void stop()} onShare={() => void share()} onStopSharing={() => void stopSharing()} /> : <RoomScreen session={session} settings={settings} friends={friends} onInviteFriend={inviteFriend} onAudioChange={(enabled) => void setAudio(enabled)} starting={starting} onStart={() => void start()} onShare={() => void share()} onStopSharing={() => void stopSharing()} onClose={() => void stop()} onMode={(mode: QualityMode) => session?.setMode(mode)} onNotice={notify} acceptShortcut={acceptShortcut ? ACCEPT_SHORTCUT : null} />)}

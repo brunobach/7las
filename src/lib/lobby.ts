@@ -1,4 +1,5 @@
 import { joinRoom } from "trystero"
+import { isAvatarSeed, validAvatarSeed } from "@/lib/avatar"
 import type { AppSettings } from "@/types"
 
 /**
@@ -25,16 +26,16 @@ const ANSWER_TIMEOUT_MS = 3 * 60_000
 const MAX_PENDING = 6
 
 export type LobbyMessage =
-  | { type: "knock"; name: string }
+  | { type: "knock"; name: string; avatar?: number }
   | { type: "admit"; invite: string }
   | { type: "deny"; reason: "rejected" | "full" }
 
-export type KnockRequest = { id: string; name: string; at: number }
+export type KnockRequest = { id: string; name: string; avatar: number; at: number }
 
 export function isLobbyMessage(value: unknown): value is LobbyMessage {
   const item = value as LobbyMessage
   if (typeof item !== "object" || item === null) return false
-  if (item.type === "knock") return typeof item.name === "string" && item.name.trim().length > 0 && item.name.length <= 40
+  if (item.type === "knock") return typeof item.name === "string" && item.name.trim().length > 0 && item.name.length <= 40 && (item.avatar === undefined || isAvatarSeed(item.avatar))
   if (item.type === "admit") return typeof item.invite === "string" && item.invite.length <= 128
   if (item.type === "deny") return item.reason === "rejected" || item.reason === "full"
   return false
@@ -127,7 +128,7 @@ export class LobbyHost {
       }
       if (host.requests.has(userId)) return
       if (host.requests.size >= MAX_PENDING) return
-      const request = { id: userId, name: message.name.trim(), at: Date.now() }
+      const request = { id: userId, name: message.name.trim(), avatar: validAvatarSeed(message.avatar, userId), at: Date.now() }
       host.requests.set(userId, request)
       host.onChange(request)
     })
@@ -194,7 +195,7 @@ export async function knock(code: string, settings: AppSettings, signal?: AbortS
     }
     const send = () => {
       for (const userId of Object.keys(room.getUsers())) {
-        void action.send({ type: "knock", name: settings.displayName.trim().slice(0, 40) || "Amigo" }, { target: userId }).catch(() => undefined)
+        void action.send({ type: "knock", name: settings.displayName.trim().slice(0, 40) || "Amigo", avatar: settings.avatarSeed }, { target: userId }).catch(() => undefined)
       }
     }
     const onAbort = () => finish(new KnockError("cancelled", "Pedido cancelado."))

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Call02Icon, Tick02Icon } from "@hugeicons/core-free-icons"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import type { Friend } from "@/types"
@@ -48,7 +48,7 @@ export function InviteFriends({ friends, inRoom, onInvite }: {
           const current = status[friend.friendId]
           return (
             <li key={friend.friendId} className="flex items-center gap-2.5">
-              <Avatar size="sm"><AvatarFallback>{friend.displayName.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
+              <UserAvatar seed={friend.avatarSeed} name={friend.displayName} size="sm" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{friend.displayName}</p>
                 {current?.state === "sent" && <p className="text-xs text-muted-foreground">Convite entregue</p>}

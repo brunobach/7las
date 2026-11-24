@@ -21,7 +21,9 @@ describe("código curto da sala de espera", () => {
   })
 
   it("valida mensagens da sala de espera", () => {
+    expect(isLobbyMessage({ type: "knock", name: "Ana", avatar: 42 })).toBe(true)
     expect(isLobbyMessage({ type: "knock", name: "Ana" })).toBe(true)
+    expect(isLobbyMessage({ type: "knock", name: "Ana", avatar: -1 })).toBe(false)
     expect(isLobbyMessage({ type: "knock", name: " " })).toBe(false)
     expect(isLobbyMessage({ type: "knock", name: "x".repeat(41) })).toBe(false)
     expect(isLobbyMessage({ type: "deny", reason: "full" })).toBe(true)

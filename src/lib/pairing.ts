@@ -1,3 +1,4 @@
+import { isAvatarSeed, validAvatarSeed } from "@/lib/avatar"
 import { newShortCode, openCodeRoom } from "@/lib/lobby"
 import type { AppSettings, Friend } from "@/types"
 
@@ -13,12 +14,13 @@ const CODE_TTL_MS = 15 * 60_000
 const SEND_INTERVAL_MS = 2_000
 const FIND_TIMEOUT_MS = 25_000
 
-type FriendCard = { type: "friend-card"; name: string; publicKey: string }
+type FriendCard = { type: "friend-card"; name: string; avatar?: number; publicKey: string }
 
 export function isFriendCard(value: unknown): value is FriendCard {
   const card = value as FriendCard
   return typeof card === "object" && card !== null && card.type === "friend-card"
     && typeof card.name === "string" && card.name.trim().length > 0 && card.name.length <= 40
+    && (card.avatar === undefined || isAvatarSeed(card.avatar))
     && typeof card.publicKey === "string" && card.publicKey.length >= 16 && card.publicKey.length <= 128
 }
 
@@ -33,14 +35,14 @@ async function toFriend(card: FriendCard): Promise<Friend> {
   return {
     friendId,
     displayName: card.name.trim(),
-    avatarSeed: Array.from(friendId).reduce((sum, char) => sum + char.charCodeAt(0), 0),
+    avatarSeed: validAvatarSeed(card.avatar, card.publicKey),
     publicKey: card.publicKey,
     createdAt: Date.now(),
   }
 }
 
 function ownCard(settings: AppSettings, publicKey: string): FriendCard {
-  return { type: "friend-card", name: settings.displayName.trim().slice(0, 40), publicKey }
+  return { type: "friend-card", name: settings.displayName.trim().slice(0, 40), avatar: settings.avatarSeed, publicKey }
 }
 
 /** Lado de quem mostra o código. `onPaired` é chamado para cada pessoa que digitar o código. */

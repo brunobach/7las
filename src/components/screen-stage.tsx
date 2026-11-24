@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { FullScreenIcon, PictureInPictureIcon, RectangularIcon } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
-import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { StageScreen } from "@/media/media-session"
@@ -94,7 +94,11 @@ export function ScreenStage({ screens, theater, onTheaterChange, empty, toolbar,
           {focused ? (
             <>
               <StageVideo key={focused.id} stream={focused.stream} muted={muted || focused.self} volume={volume} className="size-full object-contain" />
-              <div className="absolute top-3 left-3"><Badge variant={focused.host ? "default" : "secondary"}>{focused.host && <span className="size-1.5 rounded-full bg-primary-foreground" />}{screenLabel(focused)}</Badge></div>
+              <div className="absolute top-3 left-3 flex items-center gap-2 rounded-lg border border-white/10 bg-black/65 p-1.5 pr-3 text-white backdrop-blur-sm">
+                <UserAvatar seed={focused.avatar} name={focused.name} size="sm" />
+                <span className="text-sm font-medium">{screenLabel(focused)}</span>
+                {focused.host && <span className="size-1.5 rounded-full bg-live" aria-label="Ao vivo" />}
+              </div>
             </>
           ) : empty}
         </div>

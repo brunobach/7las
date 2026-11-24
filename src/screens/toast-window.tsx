@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { emit, listen } from "@tauri-apps/api/event"
 import { Logo } from "@/components/logo"
+import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
 import type { ToastItem } from "@/lib/desktop"
 
@@ -34,8 +35,13 @@ export function ToastWindow() {
       <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto" aria-live="assertive">
         {items.map((item) => (
           <li key={item.id} className="rounded-xl border border-border bg-card p-3">
-            <p className="text-sm font-medium">{item.title}</p>
-            {item.body && <p className="mt-0.5 text-xs text-muted-foreground">{item.body}</p>}
+            <div className="flex items-center gap-2.5">
+              {item.avatar !== undefined && <UserAvatar seed={item.avatar} name={item.title} size="sm" />}
+              <div>
+                <p className="text-sm font-medium">{item.title}</p>
+                {item.body && <p className="mt-0.5 text-xs text-muted-foreground">{item.body}</p>}
+              </div>
+            </div>
             <div className="mt-2.5 flex justify-end gap-2">
               <Button size="sm" variant="ghost" onClick={() => answer(item.id, false)}>{item.deny}</Button>
               <Button size="sm" onClick={() => answer(item.id, true)}>{item.accept}</Button>

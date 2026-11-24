@@ -1,4 +1,5 @@
 import { joinRoom, roles } from "trystero"
+import { isAvatarSeed } from "@/lib/avatar"
 import { roomName } from "@/lib/link"
 import { TunedPeerConnection } from "@/lib/peer"
 import type { AppSettings } from "@/types"
@@ -25,7 +26,7 @@ export type LiveState = {
 
 export function isParticipantProfile(value: unknown): value is ParticipantProfile {
   const profile = value as ParticipantProfile
-  return typeof profile === "object" && profile !== null && typeof profile.name === "string" && profile.name.length <= 40 && Number.isInteger(profile.avatar) && typeof profile.relayEnabled === "boolean" && Number.isInteger(profile.relaySlots) && profile.relaySlots >= 0 && profile.relaySlots <= 1 && (profile.sharing === undefined || typeof profile.sharing === "boolean")
+  return typeof profile === "object" && profile !== null && typeof profile.name === "string" && profile.name.length <= 40 && isAvatarSeed(profile.avatar) && typeof profile.relayEnabled === "boolean" && Number.isInteger(profile.relaySlots) && profile.relaySlots >= 0 && profile.relaySlots <= 1 && (profile.sharing === undefined || typeof profile.sharing === "boolean")
 }
 
 export function isLiveState(value: unknown): value is LiveState {

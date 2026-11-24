@@ -4,6 +4,7 @@ export type AudioMode = "none" | "process" | "system_except_discord" | "system"
 
 export type AppSettings = {
   displayName: string
+  avatarSeed: number
   roomName: string
   startWithWindows: boolean
   closeToTray: boolean
@@ -38,6 +39,7 @@ export function hasRealName(name: string): boolean {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   displayName: "Você",
+  avatarSeed: 0,
   roomName: "Sala dos amigos",
   startWithWindows: false,
   closeToTray: true,

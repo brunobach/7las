@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: "Sora Variable", sans-serif;
+  --font-heading: var(--font-sans);
   --font-sans: "Figtree Variable", sans-serif;
   --font-mono: "Martian Mono", monospace;
   --color-sidebar-ring: var(--ring);
@@ -20,6 +20,9 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-brand: var(--brand);
+  --color-live: var(--live);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -34,34 +37,37 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
 }
 
 :root {
-  --background: #18191b;
-  --foreground: #eff0f1;
-  --card: #222427;
-  --card-foreground: #eff0f1;
-  --popover: #27292d;
-  --popover-foreground: #eff0f1;
-  --primary: #ff4a1f;
-  --primary-foreground: #18191b;
-  --secondary: #2c2e32;
-  --secondary-foreground: #eff0f1;
-  --muted: #2a2c30;
-  --muted-foreground: #a5a7ac;
-  --accent: #32353a;
-  --accent-foreground: #eff0f1;
-  --destructive: #ff766d;
-  --border: #ffffff14;
-  --input: #ffffff1c;
-  --ring: #ff4a1f;
-  --sidebar: #141517;
-  --radius: 0.75rem;
+  --background: #101011;
+  --foreground: #eeeeed;
+  --card: #151516;
+  --card-foreground: #eeeeed;
+  --popover: #19191a;
+  --popover-foreground: #eeeeed;
+  --primary: #e8e8e6;
+  --primary-foreground: #1a1a1b;
+  --secondary: #222224;
+  --secondary-foreground: #eeeeed;
+  --muted: #202022;
+  --muted-foreground: #949497;
+  --accent: #29292b;
+  --accent-foreground: #eeeeed;
+  --destructive: #f87171;
+  --brand: #ff4a1f;
+  --live: #ef4444;
+  --success: #34d399;
+  --border: #ffffff10;
+  --input: #ffffff14;
+  --ring: #8b8b8e;
+  --sidebar: #0c0c0d;
+  --radius: 0.625rem;
   color-scheme: dark;
   font-synthesis: none;
 }
@@ -93,9 +99,7 @@
   .app-window {
     height: 100svh;
     min-height: 560px;
-    background:
-      radial-gradient(circle at 78% -20%, #ff4a1f0b, transparent 32%),
-      var(--background);
+    background: var(--background);
   }
   .quiet-scrollbar {
     scrollbar-color: #ffffff24 transparent;

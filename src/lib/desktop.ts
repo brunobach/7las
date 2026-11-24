@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core"
+import { isAvatarSeed, randomAvatarSeed } from "@/lib/avatar"
 import type { AppSettings, Friend, SharingState } from "@/types"
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window
@@ -7,13 +8,19 @@ const fallbackSettingsKey = "7las:settings"
 const fallbackFriendsKey = "7las:friends"
 
 export async function getSettings(): Promise<AppSettings> {
-  if (isTauri) return invoke<AppSettings>("settings_get")
   const { DEFAULT_SETTINGS } = await import("@/types")
-  try {
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(fallbackSettingsKey) ?? "{}") }
-  } catch {
-    return DEFAULT_SETTINGS
+  let settings: AppSettings
+  if (isTauri) {
+    settings = await invoke<AppSettings>("settings_get")
+  } else {
+    try {
+      settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(fallbackSettingsKey) ?? "{}") }
+    } catch {
+      settings = DEFAULT_SETTINGS
+    }
   }
+  if (isAvatarSeed(settings.avatarSeed) && settings.avatarSeed !== 0) return settings
+  return saveSettings({ ...settings, avatarSeed: randomAvatarSeed() })
 }
 
 export async function saveSettings(settings: AppSettings): Promise<AppSettings> {
@@ -84,7 +91,7 @@ export async function setAcceptShortcut(enabled: boolean): Promise<boolean> {
   return invoke<boolean>("accept_shortcut_set", { enabled })
 }
 
-export type ToastItem = { id: string; title: string; body?: string; accept: string; deny: string }
+export type ToastItem = { id: string; title: string; body?: string; avatar?: number; accept: string; deny: string }
 
 /** Mostra (ou atualiza) o aviso próprio do 7las no canto da tela, por cima de tudo. */
 export async function showToast(items: ToastItem[]): Promise<void> {

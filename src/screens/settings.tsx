@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { InformationCircleIcon } from "@hugeicons/core-free-icons"
+import { UserAvatar } from "@/components/user-avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,6 +68,10 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
             <CardContent>
               <FieldSet>
                 <FieldGroup>
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+                    <UserAvatar seed={settings.avatarSeed} name={settings.displayName} size="lg" />
+                    <div><p className="text-sm font-medium">Sua identidade nas salas</p><p className="text-xs text-muted-foreground">Use o perfil no topo da janela para escolher outro avatar.</p></div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Field><FieldLabel htmlFor="display-name">Seu nome</FieldLabel><Input id="display-name" maxLength={40} value={draft.displayName} onChange={(event) => patch({ displayName: event.target.value })} /></Field>
                     <Field><FieldLabel htmlFor="room-name">Nome da sala</FieldLabel><Input id="room-name" maxLength={40} value={draft.roomName} onChange={(event) => patch({ roomName: event.target.value })} /></Field>

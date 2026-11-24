@@ -6,6 +6,8 @@ use tauri::{AppHandle, Manager};
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub display_name: String,
+    #[serde(default)]
+    pub avatar_seed: u32,
     pub room_name: String,
     pub start_with_windows: bool,
     pub close_to_tray: bool,
@@ -31,6 +33,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             display_name: "Você".into(),
+            avatar_seed: 0,
             room_name: "Sala dos amigos".into(),
             start_with_windows: false,
             close_to_tray: true,

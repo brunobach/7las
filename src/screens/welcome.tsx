@@ -1,13 +1,19 @@
 import { useState } from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { RefreshIcon } from "@hugeicons/core-free-icons"
 import { Logo } from "@/components/logo"
+import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { randomAvatarSeed } from "@/lib/avatar"
 import { hasRealName } from "@/types"
+import type { AppSettings } from "@/types"
 
-/** Primeiro acesso: pede o nome que os amigos vão ver na sala e nos pedidos para entrar. */
-export function WelcomeScreen({ onSave }: { onSave: (name: string) => Promise<void> }) {
+export function WelcomeScreen({ settings, onSave }: { settings: AppSettings; onSave: (name: string, avatarSeed: number) => Promise<void> }) {
   const [name, setName] = useState("")
+  const [avatarSeed, setAvatarSeed] = useState(settings.avatarSeed)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -20,7 +26,7 @@ export function WelcomeScreen({ onSave }: { onSave: (name: string) => Promise<vo
     setSaving(true)
     setError("")
     try {
-      await onSave(trimmed)
+      await onSave(trimmed, avatarSeed)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason))
       setSaving(false)
@@ -29,34 +35,36 @@ export function WelcomeScreen({ onSave }: { onSave: (name: string) => Promise<vo
 
   return (
     <div className="flex h-svh items-center justify-center bg-background p-7">
-      <form
-        className="app-enter flex w-full max-w-sm flex-col gap-6"
-        onSubmit={(event) => {
-          event.preventDefault()
-          void submit()
-        }}
-      >
+      <form className="app-enter flex w-full max-w-sm flex-col gap-8" onSubmit={(event) => { event.preventDefault(); void submit() }}>
         <Logo />
+        <div className="flex flex-col items-center gap-4 text-center">
+          <UserAvatar seed={avatarSeed} name={name || "você"} size="xl" />
+          <Button type="button" variant="ghost" size="sm" onClick={() => setAvatarSeed(randomAvatarSeed())}>
+            <HugeiconsIcon icon={RefreshIcon} data-icon="inline-start" />Sortear outro avatar
+          </Button>
+        </div>
         <div>
-          <h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">Como seus amigos te chamam?</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Esse nome aparece para quem estiver na sala e quando você pedir para entrar. Dá para mudar depois nas configurações.</p>
+          <h1 className="text-xl font-medium tracking-[-0.025em]">Como seus amigos te chamam?</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Seu nome e sua criatura aparecem nas salas e nos pedidos para entrar. Você pode mudar os dois depois.</p>
         </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="welcome-name" className="text-sm font-medium">Seu nome</label>
-          <Input
-            id="welcome-name"
-            autoFocus
-            autoComplete="nickname"
-            maxLength={40}
-            placeholder="Ex.: Ana"
-            value={name}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "welcome-error" : undefined}
-            onChange={(event) => setName(event.target.value)}
-          />
-          {error && <p id="welcome-error" className="text-sm text-destructive">{error}</p>}
-        </div>
-        <Button type="submit" disabled={saving}>{saving && <Spinner data-icon="inline-start" />}Continuar</Button>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="welcome-name">Seu nome</FieldLabel>
+            <Input
+              id="welcome-name"
+              autoFocus
+              autoComplete="nickname"
+              maxLength={40}
+              placeholder="Ex.: Ana"
+              value={name}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "welcome-error" : undefined}
+              onChange={(event) => setName(event.target.value)}
+            />
+            {error && <p id="welcome-error" className="text-sm text-destructive">{error}</p>}
+          </Field>
+        </FieldGroup>
+        <Button type="submit" disabled={saving}>{saving && <Spinner data-icon="inline-start" />}Entrar no 7las</Button>
       </form>
     </div>
   )
