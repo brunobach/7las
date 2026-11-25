@@ -34,3 +34,4 @@ shots
 *.njsproj
 *.sln
 *.sw?
+.neon

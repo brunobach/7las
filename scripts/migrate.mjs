@@ -12,7 +12,7 @@ const pool = new Pool({ connectionString, max: 1 })
 try {
   await pool.query("CREATE SCHEMA IF NOT EXISTS sevenlas")
   await pool.query("CREATE TABLE IF NOT EXISTS sevenlas.migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())")
-  const applied = new Set((await pool.query<{ name: string }>("SELECT name FROM sevenlas.migrations")).rows.map((row) => row.name))
+  const applied = new Set((await pool.query("SELECT name FROM sevenlas.migrations")).rows.map((row) => row.name))
   const directory = resolve("db/migrations")
   for (const name of readdirSync(directory).filter((file) => file.endsWith(".sql")).sort()) {
     if (applied.has(name)) continue

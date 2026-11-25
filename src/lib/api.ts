@@ -1,7 +1,8 @@
 import { accessToken } from "@/lib/auth"
+import { PUBLIC_API_URL } from "@/lib/public-config"
 import type { Bootstrap, Profile, RoomDetails, RoomSummary } from "@/types"
 
-const baseUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "")
+const baseUrl = (import.meta.env.VITE_API_URL || PUBLIC_API_URL).replace(/\/$/, "")
 
 export class ApiError extends Error {
   readonly status: number

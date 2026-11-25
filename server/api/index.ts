@@ -29,7 +29,7 @@ app.use("*", async (c, next) => {
   if (!authorization?.toLowerCase().startsWith("bearer ")) return c.json({ error: "Sessão inválida." }, 401)
   let userId: string
   try {
-    const { payload } = await jwtVerify(authorization.slice(7), jwks, { issuer })
+    const { payload } = await jwtVerify(authorization.slice(7), jwks, { algorithms: ["EdDSA"], issuer, audience: issuer })
     if (!payload.sub) return c.json({ error: "Sessão inválida." }, 401)
     userId = payload.sub
   } catch {

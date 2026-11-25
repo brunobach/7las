@@ -1,6 +1,7 @@
 import { createAuthClient } from "@neon/auth"
+import { PUBLIC_AUTH_URL } from "@/lib/public-config"
 
-const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.replace(/\/$/, "")
+const authUrl = (import.meta.env.VITE_NEON_AUTH_URL || PUBLIC_AUTH_URL).replace(/\/$/, "")
 export const authConfigured = Boolean(authUrl)
 export const authClient = authUrl ? createAuthClient(authUrl) : null
 
@@ -43,8 +44,7 @@ export async function signOut(): Promise<void> {
 
 export async function accessToken(): Promise<string> {
   if (!authClient) throw new Error("O login ainda não foi configurado.")
-  const client = authClient as unknown as { token: () => Promise<{ data: { token: string } | null; error: unknown }> }
-  const { data, error } = await client.token()
-  if (error || !data?.token) throw message(error, "Não foi possível autenticar a conexão.")
-  return data.token
+  const { data, error } = await authClient.getSession()
+  if (error || !data?.session?.token) throw message(error, "Não foi possível autenticar a conexão.")
+  return data.session.token
 }

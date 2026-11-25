@@ -24,7 +24,7 @@ npm run db:migrate
 neon functions get api
 ```
 
-Depois de `neon deploy`, copie `NEON_AUTH_BASE_URL` para `VITE_NEON_AUTH_URL` no `.env.local` e preencha `VITE_API_URL` com a URL de invocação da Function. Esses dois endereços são públicos; `DATABASE_URL` nunca é usado pelo frontend. Para o build de release, configure os secrets `VITE_NEON_AUTH_URL` e `VITE_API_URL` no GitHub.
+Os endereços públicos do backend atual já vêm configurados em `src/lib/public-config.ts`; o app local funciona sem criar aliases manualmente. Para usar outro branch, copie `NEON_AUTH_BASE_URL` para `VITE_NEON_AUTH_URL` no `.env.local` e preencha `VITE_API_URL` com a URL de invocação da Function. Esses dois endereços são públicos; `DATABASE_URL` nunca é usado pelo frontend. Para substituir os padrões no build de release, configure os secrets `VITE_NEON_AUTH_URL` e `VITE_API_URL` no GitHub.
 
 No Neon Auth, cadastre `http://tauri.localhost` como domínio confiável para o app instalado. As portas de localhost usadas pelo Vite são liberadas por padrão.
 
