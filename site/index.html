@@ -3,10 +3,64 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>7las</title>
-  <meta http-equiv="refresh" content="0; url=https://github.com/brunobach/7las">
+  <meta name="theme-color" content="#101011">
+  <meta name="description" content="7las: salas persistentes e compartilhamento de tela com seus amigos no Windows.">
+  <meta property="og:title" content="7las — suas salas, suas telas">
+  <meta property="og:description" content="Entre, escolha uma sala e compartilhe. Simples assim.">
+  <meta property="og:type" content="website">
+  <title>7las — suas salas, suas telas</title>
+  <link rel="stylesheet" href="assets/invite.css">
+  <style>
+    .home { min-height: 100svh; display: flex; flex-direction: column; }
+    .nav { width: min(1180px, calc(100% - 40px)); margin: 0 auto; min-height: 80px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-link { min-height: 44px; display: inline-flex; align-items: center; color: var(--muted); font-size: 14px; text-decoration: none; }
+    .nav-link:hover { color: var(--foreground); }
+    .hero { width: min(1180px, calc(100% - 40px)); margin: auto; padding: 56px 0 72px; display: grid; grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr); align-items: center; gap: 72px; }
+    .hero-tag { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 12px; }
+    .hero-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+    .hero h1 { max-width: 560px; font-size: clamp(44px, 5.4vw, 72px); line-height: 1.02; }
+    .hero-copy { max-width: 500px; margin: 24px 0 0; color: var(--muted); font-size: 17px; line-height: 1.7; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .hero-actions .button { padding-inline: 20px; }
+    .hero-note { margin: 14px 0 0; color: var(--muted); font-size: 12px; }
+    .app-frame { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--card); box-shadow: 0 32px 100px #0005; }
+    .app-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .app-top .brand { font-size: 14px; gap: 8px; }
+    .app-top .mark { width: 26px; height: 26px; border-radius: 7px; }
+    .app-top .mark::before { width: 12px; height: 12px; border-width: 2px; }
+    .app-tabs { display: flex; gap: 4px; }
+    .app-tabs span { padding: 6px 10px; border-radius: 6px; color: var(--muted); font-size: 11px; }
+    .app-tabs span:first-child { background: #222224; color: var(--foreground); }
+    .app-body { padding: 26px; }
+    .app-body h2 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+    .app-subtitle { margin: 6px 0 22px; color: var(--muted); font-size: 12px; }
+    .empty-room { min-height: 230px; display: grid; place-items: center; padding: 28px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); text-align: center; }
+    .empty-room-icon { width: 44px; height: 44px; display: grid; place-items: center; margin: 0 auto 16px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: 21px; }
+    .empty-room strong { display: block; font-size: 15px; }
+    .empty-room p { max-width: 300px; margin: 8px auto 18px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .empty-room .button { display: inline-flex; min-height: 38px; font-size: 12px; }
+    .footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 20px 0 26px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; gap: 46px; padding-top: 36px; } .hero-copy { max-width: 580px; } }
+    @media (max-width: 520px) { .nav, .hero, .footer { width: min(100% - 32px, 1180px); } .hero { padding-bottom: 46px; } .hero-actions { display: grid; } .app-body { padding: 18px; } .app-tabs { display: none; } .empty-room { min-height: 210px; padding: 20px; } }
+  </style>
 </head>
-<body style="font-family: system-ui, sans-serif; padding: 24px 16px">
-  <p><a href="https://github.com/brunobach/7las">Ir para o 7las no GitHub</a></p>
+<body>
+  <div class="home">
+    <nav class="nav" aria-label="Navegação principal"><a class="brand" href="./"><span class="mark" aria-hidden="true"></span>7las</a><a class="nav-link" href="https://github.com/brunobach/7las">GitHub</a></nav>
+    <main class="hero">
+      <section>
+        <span class="hero-tag">Compartilhamento de tela para Windows</span>
+        <h1>Suas salas. Suas telas. Um clique.</h1>
+        <p class="hero-copy">Crie salas que ficam salvas, encontre amigos pelo nick e veja várias telas ao mesmo tempo. Sem configurar uma chamada nova toda vez.</p>
+        <div class="hero-actions"><a class="button button-primary" href="https://github.com/brunobach/7las/releases/latest">Baixar para Windows</a><a class="button" href="https://github.com/brunobach/7las">Ver o projeto</a></div>
+        <p class="hero-note">Gratuito e de código aberto.</p>
+      </section>
+      <div class="app-frame" aria-label="Interface do 7las mostrando a criação de uma sala">
+        <div class="app-top"><span class="brand"><span class="mark" aria-hidden="true"></span>7las</span><div class="app-tabs" aria-hidden="true"><span>Início</span><span>Sala atual</span><span>Configurações</span></div></div>
+        <div class="app-body"><h2>Suas salas</h2><p class="app-subtitle">Entre com um clique ou abra uma transmissão para todo mundo.</p><div class="empty-room"><div><div class="empty-room-icon" aria-hidden="true">+</div><strong>Crie a primeira sala</strong><p>Ela fica salva na sua conta. Convide seus amigos uma vez e entre sempre pelo mesmo lugar.</p><a class="button button-primary" href="https://github.com/brunobach/7las/releases/latest">Criar sala no app</a></div></div></div>
+      </div>
+    </main>
+    <footer class="footer">7las · Compartilhamento de tela com seus amigos.</footer>
+  </div>
 </body>
 </html>

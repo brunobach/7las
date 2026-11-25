@@ -21,6 +21,8 @@ pub struct AppSettings {
     pub max_direct_slots: u8,
     pub turn_url: String,
     pub turn_username: String,
+    #[serde(default)]
+    pub turn_password: String,
     /// Mostrar no perfil do Discord que está no 7las. Desligado por padrão.
     #[serde(default)]
     pub discord_presence: bool,
@@ -47,6 +49,7 @@ impl Default for AppSettings {
             max_direct_slots: 2,
             turn_url: String::new(),
             turn_username: String::new(),
+            turn_password: String::new(),
             discord_presence: false,
             discord_join_button: false,
         }

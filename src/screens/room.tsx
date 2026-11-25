@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ComputerScreenShareIcon, Copy01Icon, Logout03Icon, RefreshIcon, ScreenShareIcon, StopIcon, Tick02Icon, Upload01Icon, UserGroupIcon } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
@@ -15,13 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Spinner } from "@/components/ui/spinner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { inviteMessage } from "@/lib/link"
-import { formatShortCode, shortCodeMessage } from "@/lib/lobby"
+import { inviteMessage, formatRoomCode, persistentInviteMessage } from "@/lib/link"
+import { shortCodeMessage } from "@/lib/lobby"
 import type { MediaSession } from "@/media/media-session"
 import { wantsAudio } from "@/types"
-import type { AppSettings, Friend, QualityMode, SessionNotice } from "@/types"
+import type { AppSettings, Friend, QualityMode, RoomSummary, SessionNotice } from "@/types"
 
-export function RoomScreen({ session, settings, friends, onInviteFriend, onAudioChange, starting, onStart, onShare, onStopSharing, onClose, onMode, onNotice, acceptShortcut }: {
+export function RoomScreen({ session, settings, friends, onInviteFriend, onAudioChange, starting, onStart, onShare, onStopSharing, onClose, onMode, onNotice, acceptShortcut, room, membersPanel }: {
   session: MediaSession | null
   settings: AppSettings
   friends: Friend[]
@@ -35,6 +35,8 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
   onMode: (mode: QualityMode) => void
   onNotice: (notice: SessionNotice) => void
   acceptShortcut: string | null
+  room?: RoomSummary
+  membersPanel?: ReactNode
 }) {
   const [copied, setCopied] = useState(false)
   const [switching, setSwitching] = useState(false)
@@ -68,8 +70,8 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
     }
   }
 
-  const shortCode = session.shortCode
-  const copyInvite = () => void navigator.clipboard.writeText(shortCode ? shortCodeMessage(shortCode) : inviteMessage(session.inviteCode)).then(() => {
+  const shortCode = room?.code ?? session.shortCode
+  const copyInvite = () => void navigator.clipboard.writeText(room ? persistentInviteMessage(room.name, room.code) : shortCode ? shortCodeMessage(shortCode) : inviteMessage(session.inviteCode)).then(() => {
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
   })
@@ -81,7 +83,7 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
     <div className={cn("mx-auto flex w-full flex-col gap-5 p-7 pb-10", theater ? "max-w-[1600px]" : "max-w-[1180px]")}>
       <section className="app-enter flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2"><h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">{settings.roomName}</h1>{sharing ? <Badge><span className="size-1.5 rounded-full bg-live" />Ao vivo</Badge> : <Badge variant="secondary">Sala aberta</Badge>}</div>
+          <div className="flex items-center gap-2"><h1 className="font-heading text-2xl font-medium tracking-[-0.04em]">{room?.name ?? settings.roomName}</h1>{sharing ? <Badge><span className="size-1.5 rounded-full bg-live" />Ao vivo</Badge> : <Badge variant="secondary">Sala aberta</Badge>}</div>
           <p className="mt-1.5 text-sm text-muted-foreground">{viewers === 0 ? "Esperando seus amigos entrarem" : `${viewers} ${viewers === 1 ? "pessoa" : "pessoas"} na sala${sharing ? "" : " · sua tela ainda não está sendo mostrada"}`}</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
@@ -96,7 +98,7 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
               <Button onClick={onShare}><HugeiconsIcon icon={ScreenShareIcon} data-icon="inline-start" />Compartilhar tela</Button>
             </>
           )}
-          <Button variant="destructive" onClick={onClose}><HugeiconsIcon icon={Logout03Icon} data-icon="inline-start" />Fechar sala</Button>
+          <Button variant="destructive" onClick={onClose}><HugeiconsIcon icon={Logout03Icon} data-icon="inline-start" />{room ? "Sair da sala" : "Fechar sala"}</Button>
         </div>
       </section>
       {session.error && <Alert variant="destructive"><AlertTitle>Problema na conexão</AlertTitle><AlertDescription>{session.error}</AlertDescription></Alert>}
@@ -142,16 +144,20 @@ export function RoomScreen({ session, settings, friends, onInviteFriend, onAudio
               </CardContent>
             </Card>
           )}
-          <Card className="border-border/60 ring-0">
-            <CardHeader><CardTitle>Chamar amigos</CardTitle><CardDescription>{shortCode ? "Mande este código. Quando alguém pedir para entrar, você aceita aqui." : "Envie o convite por mensagem. Quem receber clica em “Entrar com convite” e cola."}</CardDescription></CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {shortCode && <p className="text-center font-mono text-3xl font-medium tracking-[0.12em] tabular-nums select-all" aria-label={`Código ${shortCode.split("").join(" ")}`}>{formatShortCode(shortCode)}</p>}
-              <Button onClick={copyInvite}><HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} data-icon="inline-start" />{copied ? "Convite copiado" : "Copiar convite"}</Button>
-              {!shortCode && <p className="truncate font-mono text-[11px] text-muted-foreground" title={session.inviteCode}>{session.inviteCode}</p>}
-              <InviteFriends friends={friends} inRoom={(friend) => session.participants.some((person) => !person.self && person.name === friend.displayName)} onInvite={onInviteFriend} />
-            </CardContent>
-          </Card>
-          <ParticipantsPanel participants={session.participants} />
+          {membersPanel ?? (
+            <>
+              <Card className="border-border/60 ring-0">
+                <CardHeader><CardTitle>Chamar amigos</CardTitle><CardDescription>{room ? "O link abre direto nesta sala. Quem entrar fica na lista de membros." : shortCode ? "Mande este código. Quando alguém pedir para entrar, você aceita aqui." : "Envie o convite por mensagem. Quem receber clica em “Entrar com convite” e cola."}</CardDescription></CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  {shortCode && <p className="text-center font-mono text-2xl font-medium tracking-[0.12em] tabular-nums select-all" aria-label={`Código ${shortCode.split("").join(" ")}`}>{formatRoomCode(shortCode)}</p>}
+                  <Button onClick={copyInvite}><HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} data-icon="inline-start" />{copied ? "Convite copiado" : "Copiar convite"}</Button>
+                  {!shortCode && <p className="truncate font-mono text-[11px] text-muted-foreground" title={session.inviteCode}>{session.inviteCode}</p>}
+                  <InviteFriends friends={friends} inRoom={(friend) => session.participants.some((person) => !person.self && person.name === friend.displayName)} onInvite={onInviteFriend} />
+                </CardContent>
+              </Card>
+              <ParticipantsPanel participants={session.participants} />
+            </>
+          )}
           <Card className="border-border/60 ring-0">
             <CardHeader><CardTitle>Qualidade</CardTitle><CardDescription>Nitidez para texto e código, fluidez para jogos e vídeos.</CardDescription></CardHeader>
             <CardContent><ToggleGroup className="w-full" variant="outline" value={[session.mode]} onValueChange={(value) => value[0] && onMode(value[0] as QualityMode)}><ToggleGroupItem className="flex-1" value="sharp">Nítido · 30 fps</ToggleGroupItem><ToggleGroupItem className="flex-1" value="smooth">Fluido · 60 fps</ToggleGroupItem></ToggleGroup></CardContent>

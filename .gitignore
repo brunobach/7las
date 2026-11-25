@@ -19,6 +19,7 @@ src-tauri/target
 .claude
 .env
 .env.*
+!.env.example
 *.pem
 Thumbs.db
 shots

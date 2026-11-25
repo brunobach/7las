@@ -51,6 +51,15 @@ export async function detectHardware(): Promise<void> {
 
 async function tune(peer: RTCPeerConnection): Promise<void> {
   for (const sender of peer.getSenders()) {
+    if (sender.track?.kind === "audio") {
+      const params = sender.getParameters()
+      const encoding = params.encodings[0]
+      if (!encoding) continue
+      encoding.maxBitrate = 128_000
+      encoding.priority = "high"
+      await sender.setParameters(params).catch(() => undefined)
+      continue
+    }
     if (sender.track?.kind !== "video") continue
     const params = sender.getParameters()
     const encoding = params.encodings[0] as Encoding | undefined

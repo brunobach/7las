@@ -39,11 +39,16 @@ function StageVideo({ stream, muted, volume, className }: { stream: MediaStream;
       element.muted = true
       void element.play().catch(() => undefined)
     })
+    return () => {
+      element.pause()
+      if (element.srcObject === stream) element.srcObject = null
+    }
   }, [stream])
   useEffect(() => {
     if (!ref.current) return
     ref.current.muted = muted
     if (volume !== undefined) ref.current.volume = volume
+    if (!muted) void ref.current.play().catch(() => undefined)
   }, [muted, volume])
   return <video ref={ref} autoPlay playsInline muted={muted} className={className} />
 }

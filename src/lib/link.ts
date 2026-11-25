@@ -37,3 +37,33 @@ export function sessionInviteCode(invite: SessionInvite): string {
 export function inviteMessage(code: string): string {
   return `Vem ver minha tela no 7las! Abra o app, clique em "Entrar com convite" e cole esta mensagem.\n\n${code}`
 }
+
+export const PUBLIC_APP_URL = "https://brunobach.github.io/7las"
+
+export function normalizeRoomCode(value: string): string {
+  return value.trim().toUpperCase().replace(/[^A-F0-9]/g, "").slice(0, 10)
+}
+
+export function parseRoomCode(value: string): string {
+  const query = /[?&]sala=([A-F0-9]{10})(?:&|$)/i.exec(value.trim())
+  if (query) return query[1].toUpperCase()
+  const match = /(?:^|\s)([A-F0-9]{5})-?([A-F0-9]{5})(?:\s|$)/i.exec(value.trim())
+  return match ? `${match[1]}${match[2]}`.toUpperCase() : normalizeRoomCode(value)
+}
+
+export function formatRoomCode(value: string): string {
+  const code = normalizeRoomCode(value)
+  return code.length > 5 ? `${code.slice(0, 5)}-${code.slice(5)}` : code
+}
+
+export function roomInviteUrl(code: string): string {
+  return `${PUBLIC_APP_URL}/entrar/?sala=${normalizeRoomCode(code)}`
+}
+
+export function friendInviteUrl(username: string): string {
+  return `${PUBLIC_APP_URL}/amigo/?nick=${encodeURIComponent(username)}`
+}
+
+export function persistentInviteMessage(roomName: string, code: string): string {
+  return `Entre em “${roomName}” no 7las: ${roomInviteUrl(code)}`
+}

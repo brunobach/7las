@@ -15,6 +15,7 @@ export class IncomingStream {
   }
 
   clear(): void {
+    if (this.current) for (const track of this.current.getTracks()) track.stop()
     this.current = null
   }
 }

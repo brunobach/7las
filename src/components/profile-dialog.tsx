@@ -8,15 +8,17 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { randomAvatarSeed } from "@/lib/avatar"
 import { hasRealName } from "@/types"
-import type { AppSettings } from "@/types"
+import type { AppSettings, Profile } from "@/types"
 
-export function ProfileDialog({ open, onOpenChange, settings, onSave }: {
+export function ProfileDialog({ open, onOpenChange, settings, profile, onSave }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   settings: AppSettings
-  onSave: (settings: AppSettings) => Promise<void>
+  profile: Profile
+  onSave: (settings: AppSettings, username: string) => Promise<void>
 }) {
   const [name, setName] = useState(settings.displayName)
+  const [username, setUsername] = useState(profile.username)
   const [avatarSeed, setAvatarSeed] = useState(settings.avatarSeed)
   const [choices, setChoices] = useState<number[]>(() => [settings.avatarSeed, ...Array.from({ length: 7 }, randomAvatarSeed)])
   const [saving, setSaving] = useState(false)
@@ -27,9 +29,13 @@ export function ProfileDialog({ open, onOpenChange, settings, onSave }: {
       setError("Digite um nome que seus amigos reconheçam.")
       return
     }
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      setError("O nick precisa ter de 3 a 20 letras, números ou _.")
+      return
+    }
     setSaving(true)
     try {
-      await onSave({ ...settings, displayName: name.trim(), avatarSeed })
+      await onSave({ ...settings, displayName: name.trim(), avatarSeed }, username)
       onOpenChange(false)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason))
@@ -57,6 +63,10 @@ export function ProfileDialog({ open, onOpenChange, settings, onSave }: {
             <Field>
               <FieldLabel htmlFor="profile-name">Seu nome</FieldLabel>
               <Input id="profile-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={40} autoComplete="nickname" aria-invalid={Boolean(error)} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="profile-username">Nick único</FieldLabel>
+              <Input id="profile-username" value={username} onChange={(event) => setUsername(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} minLength={3} maxLength={20} autoComplete="username" aria-invalid={Boolean(error)} />
             </Field>
             <Field>
               <FieldLabel>Escolha sua criatura</FieldLabel>

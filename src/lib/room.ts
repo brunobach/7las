@@ -41,7 +41,7 @@ export async function enterRoom(secret: string, hostId: string | undefined, sett
     password: secret,
     identity: hostId ? "local" : "none",
     rtcPolyfill: TunedPeerConnection,
-    turnConfig: settings.turnUrl ? [{ urls: settings.turnUrl, username: settings.turnUsername || undefined }] : undefined,
+    turnConfig: settings.turnUrl ? [{ urls: settings.turnUrl, username: settings.turnUsername || undefined, credential: settings.turnPassword || undefined }] : undefined,
     use: [roles(hostId ? {} : { selfAsAdmin: true })],
   }, hostId ? `${base}~${hostId}` : base)
   const live = room.makeState<LiveState>("live", { live: false, sessionId: "", originHostId: "", hostName: "" }, { validate: isLiveState })

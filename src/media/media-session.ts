@@ -47,9 +47,9 @@ export const MAX_VIEWERS = 4
 const HELLO_INTERVAL_MS = 4_000
 const REPUBLISH_AFTER_MS = 8_000
 /** Verificação de presença: quem some sem avisar (app recarregado, travado, sem rede) sai da sala. */
-const PRESENCE_INTERVAL_MS = 3_000
-const PRESENCE_TIMEOUT_MS = 2_500
-const PRESENCE_MAX_MISSES = 4
+const PRESENCE_INTERVAL_MS = 10_000
+const PRESENCE_TIMEOUT_MS = 4_000
+const PRESENCE_MAX_MISSES = 3
 
 export class MediaSession {
   readonly role: "host" | "viewer"
@@ -164,6 +164,9 @@ export class MediaSession {
     this.screen = screen
     this.out = new MediaStream(screen.getTracks())
     this.watchCaptureEnd()
+    for (const track of screen.getAudioTracks()) track.addEventListener("ended", () => {
+      if (this.screen === screen) this.onChange()
+    }, { once: true })
     void this.publishLive(true).catch(() => undefined)
     for (const nodeId of this.coordinator?.nodes.keys() ?? []) {
       const assignment = nodeId === this.hostId ? null : this.coordinator!.assignmentOf(nodeId)
@@ -233,6 +236,9 @@ export class MediaSession {
     }
     applyContentHint(screen.getVideoTracks()[0], this.settings.mode)
     this.guestScreen = screen
+    for (const track of screen.getAudioTracks()) track.addEventListener("ended", () => {
+      if (this.guestScreen === screen) this.onChange()
+    }, { once: true })
     const video = screen.getVideoTracks()[0]
     video?.addEventListener("ended", () => {
       // Encerrado pela barra do Windows: só para a tela do convidado, ele continua na sala.
@@ -275,6 +281,7 @@ export class MediaSession {
   static async watch(code: string, settings: AppSettings, onChange: () => void, onEnd: () => void): Promise<MediaSession> {
     const invite = parseSessionInvite(code)
     setPeerMode(settings.mode)
+    await detectHardware()
     const session = await enterRoom(invite.secret, invite.hostId, settings)
     try {
       const { userId } = await session.room.getSelf()

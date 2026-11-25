@@ -101,9 +101,10 @@ export function SettingsScreen({ settings, onSave }: { settings: AppSettings; on
             <CardHeader><CardTitle>Conexões e retransmissão</CardTitle><CardDescription>STUN é usado por padrão. TURN ajuda em redes restritivas e exige um servidor configurado por você.</CardDescription></CardHeader>
             <CardContent>
               <FieldGroup>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4 max-[760px]:grid-cols-1">
                   <Field><FieldLabel htmlFor="turn-url">Endereço TURN</FieldLabel><Input id="turn-url" value={draft.turnUrl} onChange={(event) => patch({ turnUrl: event.target.value })} placeholder="turns:turn.seudominio.com:5349" /></Field>
                   <Field><FieldLabel htmlFor="turn-user">Usuário TURN</FieldLabel><Input id="turn-user" autoComplete="off" value={draft.turnUsername} onChange={(event) => patch({ turnUsername: event.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="turn-password">Credencial TURN</FieldLabel><Input id="turn-password" type="password" autoComplete="off" value={draft.turnPassword} onChange={(event) => patch({ turnPassword: event.target.value })} /></Field>
                 </div>
                 <Field orientation="horizontal"><FieldContent><FieldLabel htmlFor="relay">Permitir retransmissão</FieldLabel><FieldDescription>Seu computador pode encaminhar a mídia recebida, usando upload e processamento.</FieldDescription></FieldContent><Switch id="relay" checked={draft.relayEnabled} onCheckedChange={(checked) => patch({ relayEnabled: checked })} /></Field>
                 <Field><FieldLabel htmlFor="relay-slots">Saídas quando for relay</FieldLabel><Select value={String(draft.relaySlots)} onValueChange={(value) => patch({ relaySlots: Number(value) })} disabled={!draft.relayEnabled}><SelectTrigger id="relay-slots" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="1">1 espectador</SelectItem></SelectGroup></SelectContent></Select><FieldDescription>O dono da sala decide as conexões. Quem retransmite nunca escolhe destinatários por conta própria.</FieldDescription></Field>

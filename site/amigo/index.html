@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#101011">
+  <title>Adicionar amigo · 7las</title>
+  <meta name="description" content="Abra o 7las e adicione um amigo pelo nick.">
+  <link rel="stylesheet" href="../assets/invite.css">
+</head>
+<body>
+  <main class="invite-shell">
+    <div class="invite-card">
+      <a class="brand" href="../" aria-label="7las — página inicial"><span class="mark" aria-hidden="true"></span>7las</a>
+      <section id="with-nick" hidden>
+        <p class="invite-eyebrow">Convite de amizade</p>
+        <h1>Adicione <span id="nick-title"></span> no 7las.</h1>
+        <p class="invite-copy">O app abrirá e adicionará esse perfil à sua lista de amigos. Depois, vocês podem convidar um ao outro para qualquer sala.</p>
+        <div class="invite-code" id="nick" aria-label="Nick do amigo"></div>
+        <div class="invite-actions">
+          <a class="button button-primary" id="open">Adicionar no 7las</a>
+          <button class="button" type="button" id="copy">Copiar link do convite</button>
+        </div>
+        <div class="invite-help"><p>Ainda não instalou? <a href="https://github.com/brunobach/7las/releases/latest">Baixe o 7las para Windows</a>.</p></div>
+      </section>
+      <section id="without-nick" hidden>
+        <p class="invite-eyebrow">Link incompleto</p>
+        <h1>Não encontramos esse perfil.</h1>
+        <p class="invite-copy">Peça para seu amigo copiar o convite de novo. O link precisa ter o nick registrado no 7las.</p>
+        <div class="invite-actions"><a class="button button-primary" href="../">Ir para o início</a></div>
+      </section>
+    </div>
+  </main>
+  <script>
+    const nick = (new URLSearchParams(location.search).get("nick") || "").toLowerCase()
+    const valid = /^[a-z0-9_]{3,20}$/.test(nick)
+    document.getElementById(valid ? "with-nick" : "without-nick").hidden = false
+    if (valid) {
+      const label = "@" + nick
+      const link = "sevenlas://amigo/" + nick
+      document.getElementById("nick").textContent = label
+      document.getElementById("nick-title").textContent = label
+      document.getElementById("open").href = link
+      const copy = document.getElementById("copy")
+      copy.addEventListener("click", () => {
+        navigator.clipboard?.writeText(location.href).then(() => {
+          copy.textContent = "Link copiado"
+          setTimeout(() => { copy.textContent = "Copiar link do convite" }, 1600)
+        }, () => undefined)
+      })
+      setTimeout(() => { location.href = link }, 350)
+    }
+  </script>
+</body>
+</html>

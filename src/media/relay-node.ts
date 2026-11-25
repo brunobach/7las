@@ -4,6 +4,7 @@ import { OutgoingStream } from "@/media/outgoing-stream"
 
 export class RelayNode {
   private outputs = new Map<string, OutgoingStream>()
+  private pending = new Map<string, number>()
   private incoming: MediaStream | null = null
 
   private session: RoomSession
@@ -22,12 +23,13 @@ export class RelayNode {
 
   setIncoming(stream: MediaStream): void {
     this.incoming = stream
-    for (const output of this.outputs.values()) void output.publish()
+    for (const [childId, epoch] of this.pending) void this.assign(childId, epoch)
   }
 
   async assign(childId: string, treeEpoch: number): Promise<void> {
-    this.outputs.get(childId)?.close()
+    this.pending.set(childId, treeEpoch)
     if (!this.incoming) return
+    this.outputs.get(childId)?.close()
     const metadata: StreamMetadata = { kind: "screen", sessionId: this.sessionId, originHostId: this.originHostId, parentId: (await this.session.room.getSelf()).userId, treeEpoch }
     const output = new OutgoingStream(this.session, this.incoming, childId, metadata)
     this.outputs.set(childId, output)
@@ -35,6 +37,7 @@ export class RelayNode {
   }
 
   remove(childId: string): void {
+    this.pending.delete(childId)
     this.outputs.get(childId)?.close()
     this.outputs.delete(childId)
   }
@@ -42,6 +45,7 @@ export class RelayNode {
   close(): void {
     for (const output of this.outputs.values()) output.close()
     this.outputs.clear()
+    this.pending.clear()
     this.incoming = null
   }
 }

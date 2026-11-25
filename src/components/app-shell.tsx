@@ -1,87 +1,71 @@
 import { useState, type ReactNode } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { DashboardSquare01Icon, MinimizeScreenIcon, Settings02Icon, UserGroupIcon } from "@hugeicons/core-free-icons"
+import { Home01Icon, Logout03Icon, MinimizeScreenIcon, Settings02Icon, UserGroupIcon } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
 import { Logo } from "@/components/logo"
 import { ProfileDialog } from "@/components/profile-dialog"
 import { UserAvatar } from "@/components/user-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { hideToTray } from "@/lib/desktop"
-import type { AppSettings, AppView } from "@/types"
+import type { AppSettings, AppView, Profile } from "@/types"
 
-const items: { id: AppView; label: string; icon: typeof DashboardSquare01Icon }[] = [
-  { id: "home", label: "Início", icon: DashboardSquare01Icon },
-  { id: "room", label: "Minha sala", icon: UserGroupIcon },
+const items: { id: AppView; label: string; icon: typeof Home01Icon }[] = [
+  { id: "home", label: "Início", icon: Home01Icon },
+  { id: "room", label: "Sala atual", icon: UserGroupIcon },
   { id: "settings", label: "Configurações", icon: Settings02Icon },
 ]
 
-export function AppShell({ view, onView, live, title, subtitle, settings, onSave, children }: {
+export function AppShell({ view, onView, live, settings, profile, onSave, onSignOut, children }: {
   view: AppView
   settings: AppSettings
+  profile: Profile
   onView: (view: AppView) => void
-  onSave: (settings: AppSettings) => Promise<void>
+  onSave: (settings: AppSettings, username: string) => Promise<void>
+  onSignOut: () => Promise<void>
   live: boolean
-  title: string
-  subtitle: string
   children: ReactNode
 }) {
   const [profileOpen, setProfileOpen] = useState(false)
   return (
-    <div className="app-window grid grid-cols-[200px_minmax(0,1fr)] grid-rows-[64px_minmax(0,1fr)]">
-      <aside className="row-span-2 flex flex-col border-r border-border bg-sidebar px-3 py-4">
+    <div className="app-window grid grid-rows-[68px_minmax(0,1fr)]">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-border/80 px-6 max-[700px]:px-4">
         <a className="skip-link" href="#content">Ir para o conteúdo</a>
-        <Logo className="px-2" />
-        <nav className="mt-8 flex flex-col gap-1" aria-label="Navegação principal">
+        <Logo className="justify-self-start" />
+        <nav className="flex items-center gap-1 rounded-xl border border-border/60 bg-card/45 p-1" aria-label="Navegação principal">
           {items.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className={cn("h-10 justify-start px-3 text-muted-foreground", view === item.id && "bg-secondary text-foreground")}
-              aria-current={view === item.id ? "page" : undefined}
-              onClick={() => onView(item.id)}
-            >
+            <Button key={item.id} variant="ghost" size="sm" className={cn("relative h-8 px-3 text-muted-foreground", view === item.id && "bg-secondary text-foreground shadow-sm")} aria-current={view === item.id ? "page" : undefined} onClick={() => onView(item.id)}>
               <HugeiconsIcon icon={item.icon} data-icon="inline-start" />
-              {item.label}
-              {item.id === "room" && live && <span className="ml-auto size-2 rounded-full bg-live" aria-label="Ao vivo" />}
+              <span className="max-[700px]:sr-only">{item.label}</span>
+              {item.id === "room" && live && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-live" aria-label="Ao vivo" />}
             </Button>
           ))}
         </nav>
-        <div className="mt-auto px-3 pb-2">
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <span className={cn("size-1.5 rounded-full", live ? "bg-live" : "bg-muted-foreground")} />
-            {live ? "Compartilhando agora" : "Pronto para compartilhar"}
-          </div>
-          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            {live ? "Pode minimizar. A transmissão continua na bandeja." : "Fechar a janela deixa o 7las na bandeja."}
-          </p>
-        </div>
-      </aside>
-      <header className="flex items-center justify-between gap-4 border-b border-border px-6">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{title}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {live && <Badge variant="secondary" className="h-7 gap-2 px-2.5"><span className="size-1.5 rounded-full bg-live" />Ao vivo</Badge>}
+        <div className="flex min-w-0 items-center justify-end gap-2">
+          {live && <Badge variant="secondary" className="gap-2 max-[900px]:hidden"><span className="size-1.5 rounded-full bg-live" />Ao vivo</Badge>}
           <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" className="h-auto max-w-44 gap-2.5 px-2 py-1.5" aria-label={`${settings.displayName}. Editar perfil`} onClick={() => setProfileOpen(true)} />}>
-              <UserAvatar seed={settings.avatarSeed} name={settings.displayName} size="sm" />
-              <span className="truncate text-sm">{settings.displayName}</span>
-            </TooltipTrigger>
-            <TooltipContent>Editar nome e avatar</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Ocultar para a bandeja" onClick={() => void hideToTray()} />}>
-              <HugeiconsIcon icon={MinimizeScreenIcon} />
-            </TooltipTrigger>
+            <TooltipTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Ocultar para a bandeja" onClick={() => void hideToTray()} />}><HugeiconsIcon icon={MinimizeScreenIcon} /></TooltipTrigger>
             <TooltipContent>Ocultar para a bandeja</TooltipContent>
           </Tooltip>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" className="h-auto max-w-48 gap-2.5 px-2 py-1.5" aria-label={`${settings.displayName}. Abrir menu da conta`} />}>
+              <UserAvatar seed={settings.avatarSeed} name={settings.displayName} size="sm" />
+              <span className="hidden min-w-0 text-left sm:block"><span className="block truncate text-sm">{settings.displayName}</span><span className="block truncate text-[11px] text-muted-foreground">@{profile.username}</span></span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuGroup><DropdownMenuLabel><span className="block truncate text-foreground">{settings.displayName}</span><span className="mt-0.5 block truncate">@{profile.username}</span></DropdownMenuLabel></DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup><DropdownMenuItem onClick={() => setProfileOpen(true)}>Editar nome e avatar</DropdownMenuItem></DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup><DropdownMenuItem onClick={() => void onSignOut()}><HugeiconsIcon icon={Logout03Icon} />Sair da conta</DropdownMenuItem></DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
       <main id="content" className="quiet-scrollbar min-h-0 overflow-y-auto" tabIndex={-1}>{children}</main>
-      {profileOpen && <ProfileDialog open onOpenChange={setProfileOpen} settings={settings} onSave={onSave} />}
+      {profileOpen && <ProfileDialog open onOpenChange={setProfileOpen} settings={settings} profile={profile} onSave={onSave} />}
     </div>
   )
 }

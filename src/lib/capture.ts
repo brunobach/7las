@@ -12,7 +12,7 @@ export const canShare = typeof navigator !== "undefined" && Boolean(navigator.me
  * (o Windows só entrega som ao compartilhar uma tela inteira, com "Compartilhar áudio do sistema" marcado).
  */
 export async function captureScreen(controller?: CaptureController, withAudio = false): Promise<MediaStream> {
-  const stream = await navigator.mediaDevices.getDisplayMedia({
+  const options = {
     video: { frameRate: { ideal: 60 }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     // Som de jogo/vídeo: sem os filtros de voz, que cortam música e efeitos.
     audio: withAudio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2, sampleRate: 48_000 } : false,
@@ -24,7 +24,14 @@ export async function captureScreen(controller?: CaptureController, withAudio = 
     surfaceSwitching: "include",
     selfBrowserSurface: "exclude",
     monitorTypeSurfaces: "include",
-  } as DisplayMediaStreamOptions)
+  } as DisplayMediaStreamOptions
+  let stream: MediaStream
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia(options)
+  } catch (error) {
+    if (!withAudio || !(error instanceof DOMException) || !["NotReadableError", "OverconstrainedError"].includes(error.name)) throw error
+    stream = await navigator.mediaDevices.getDisplayMedia({ ...options, audio: false, systemAudio: "exclude" } as DisplayMediaStreamOptions)
+  }
   for (const track of stream.getAudioTracks()) track.contentHint = "music"
   return stream
 }

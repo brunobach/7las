@@ -1,5 +1,6 @@
 import { joinRoom } from "trystero"
 import { isAvatarSeed, validAvatarSeed } from "@/lib/avatar"
+import { PUBLIC_APP_URL } from "@/lib/link"
 import type { AppSettings } from "@/types"
 
 /**
@@ -76,7 +77,7 @@ export function findShortCode(value: string): string | null {
 }
 
 export function shortCodeMessage(code: string): string {
-  return `Vem ver minha tela no 7las! Abra o app, clique em "Entrar com convite" e digite o código ${formatShortCode(code)}`
+  return `Vem ver minha tela no 7las: ${PUBLIC_APP_URL}/entrar/?codigo=${formatShortCode(code)}`
 }
 
 async function codeRoomName(seed: string): Promise<string> {
@@ -91,7 +92,7 @@ export async function openCodeRoom(purpose: "lobby" | "friend" | "inbox", code: 
     appId: APP_ID,
     password: seed,
     identity: "none",
-    turnConfig: settings.turnUrl ? [{ urls: settings.turnUrl, username: settings.turnUsername || undefined }] : undefined,
+    turnConfig: settings.turnUrl ? [{ urls: settings.turnUrl, username: settings.turnUsername || undefined, credential: settings.turnPassword || undefined }] : undefined,
   }, await codeRoomName(seed))
 }
 
